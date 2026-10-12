@@ -1,0 +1,78 @@
+{
+  "name": "esp-pin-planner",
+  "displayName": "ESP Pin Planner",
+  "description": "Visual ESP32 pin planning without changing application source code.",
+  "version": "0.0.1",
+  "publisher": "local-development",
+  "engines": { "vscode": "^1.90.0" },
+  "categories": ["Other"],
+  "main": "./dist/extension.js",
+  "activationEvents": ["onCommand:espPinPlanner.open", "onCommand:espPinPlanner.validate", "onCommand:espPinPlanner.create", "onCommand:espPinPlanner.selectTarget", "workspaceContains:**/.pinconfig.json", "onLanguage:json"],
+  "contributes": {
+    "commands": [
+      { "command": "espPinPlanner.open", "title": "Open Pin Planner", "category": "ESP Pin Planner" },
+      { "command": "espPinPlanner.validate", "title": "Validate Pin Config", "category": "ESP Pin Planner" },
+      { "command": "espPinPlanner.create", "title": "Create New Pin Config", "category": "ESP Pin Planner" },
+      { "command": "espPinPlanner.selectTarget", "title": "Select Target Chip", "category": "ESP Pin Planner" }
+    ],
+    "jsonValidation": [{ "fileMatch": "**/.pinconfig.json", "url": "./schemas/pinconfig.schema.json" }],
+    "configuration": {
+      "title": "ESP Pin Planner",
+      "properties": {
+        "espPinPlanner.defaultTarget": {
+          "type": "string",
+          "enum": ["esp32s3", "esp32c6", "esp32p4"],
+          "default": "esp32s3",
+          "description": "Target chip selected by default when creating a new .pinconfig.json via the 'Create New Pin Config' command, or when validate/open is run on an empty workspace."
+        },
+        "espPinPlanner.schemaStrictInstance": {
+          "type": "boolean",
+          "default": true,
+          "description": "If true, the JSON schema and runtime validator restrict peripheral owner/instance names to the chip-specific set (e.g. no 'uart5' on ESP32-P4). Turn off to allow experimental/free-form instance names with reduced diagnostics."
+        },
+        "espPinPlanner.rmtChannelBank": {
+          "type": "string",
+          "enum": ["tx", "rx", "auto"],
+          "default": "auto",
+          "description": "RMT channel bank preference used when ESP-IDF boards have per-bank TX-only vs RX-only restrictions on S3/C6. 'auto' warns on ambiguous assignments; 'tx'/'rx' treat all channels as the chosen bank and suppress opposite-direction conflicts."
+        },
+        "espPinPlanner.board.preset": {
+          "type": "string",
+          "enum": ["auto", "none", "byId"],
+          "default": "auto",
+          "description": "Board profile selection: 'auto' picks the only shipped board matching the target chip, or the unique board flagged as the chip's reference board (board JSON \"default\": true); 'none' disables board features (no reserved-pin warnings and default signal-map shortcuts); 'byId' uses vendor+id below."
+        },
+        "espPinPlanner.board.vendor": {
+          "type": "string",
+          "default": "espressif",
+          "description": "Vendor folder name under boards/<vendor>/ when board.preset='byId'."
+        },
+        "espPinPlanner.board.id": {
+          "type": "string",
+          "default": "esp32-s3-devkitc-1",
+          "description": "Board id (without .json suffix) under boards/<vendor>/ when board.preset='byId'."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "npm run typecheck && npm run build:extension && npm run build:webview",
+    "build:extension": "esbuild src/extension.ts --bundle --platform=node --format=cjs --main-fields=module,main --external:vscode --outfile=dist/extension.js",
+    "build:webview": "vite build --config webview/vite.config.ts",
+    "typecheck": "tsc --noEmit",
+    "dev:webview": "vite --config webview/vite.config.ts --host 127.0.0.1",
+    "test": "tsx --test test/*.test.ts",
+    "vscode:prepublish": "npm run build"
+  },
+  "dependencies": { "jsonc-parser": "^3.3.1", "react": "^18.3.1", "react-dom": "^18.3.1", "zustand": "^4.5.5" },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@types/vscode": "~1.90.0",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vite": "^6.4.4"
+  }
+}
