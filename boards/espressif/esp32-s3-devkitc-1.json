@@ -1,0 +1,68 @@
+{
+  "id": "esp32-s3-devkitc-1",
+  "name": "ESP32-S3-DevKitC-1 (N8R8)",
+  "vendor": "espressif",
+  "targetChip": "esp32s3",
+  "default": true,
+  "package": "QFN-56",
+  "boardPcbVersion": "v1.6",
+  "source": {
+    "document": "ESP32-S3-DevKitC-1 User Guide",
+    "version": "v1.6",
+    "url": "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/hw-reference/esp32s3/user-guide-devkitc-1.html"
+  },
+  "pins": [
+    { "gpio": 0,  "label": "BOOT / GPIO0", "strapDirection": "pull-up" },
+    { "gpio": 3,  "label": "GPIO3 (Strapping)", "strapDirection": "pull-down" },
+    { "gpio": 19, "label": "USB_D- / GPIO19" },
+    { "gpio": 20, "label": "USB_D+ / GPIO20" },
+    { "gpio": 45, "label": "GPIO45 (Strapping)", "strapDirection": "pull-down" },
+    { "gpio": 46, "label": "GPIO46 (Strapping, Input-only)", "strapDirection": "pull-down" },
+    { "gpio": 48, "label": "RGB LED / GPIO48", "reserved": true },
+    { "gpio": 47, "label": "Green LED / GPIO47" },
+    { "gpio": 4,  "label": "GPIO4" }
+  ],
+  "reservedGpios": [48],
+  "onboardPins": [
+    { "gpio": 43, "usage": "on-board USB-to-UART bridge (U0TXD)" },
+    { "gpio": 44, "usage": "on-board USB-to-UART bridge (U0RXD)" }
+  ],
+  "peripherals": {
+    "uart0": { "tx": "GPIO43", "rx": "GPIO44", "rts": "GPIO15", "cts": "GPIO16" },
+    "spi2":  { "mosi": "GPIO11", "miso": "GPIO13", "sclk": "GPIO12", "cs": "GPIO10" },
+    "i2c0":  { "sda": "GPIO8",  "scl": "GPIO9" },
+    "ledc2": { "out": "GPIO48" }
+  },
+  "powerDomain": {
+    "default": "VDD33",
+    "perGpio": {
+      "1": "VDD3P3_RTC",
+      "2": "VDD3P3_RTC",
+      "3": "VDD3P3_RTC",
+      "4": "VDD3P3_RTC",
+      "5": "VDD3P3_RTC",
+      "6": "VDD3P3_RTC",
+      "7": "VDD3P3_RTC",
+      "8": "VDD3P3_RTC",
+      "9": "VDD3P3_RTC",
+      "10": "VDD3P3_RTC",
+      "11": "VDD3P3_RTC",
+      "12": "VDD3P3_RTC",
+      "13": "VDD3P3_RTC",
+      "14": "VDD3P3_RTC",
+      "15": "VDD3P3_RTC",
+      "16": "VDD3P3_RTC",
+      "17": "VDD3P3_RTC",
+      "18": "VDD3P3_RTC",
+      "19": "VDD3P3_RTC",
+      "20": "VDD3P3_RTC",
+      "21": "VDD3P3_RTC"
+    }
+  },
+  "notes": [
+    "RGB LED on GPIO48 is a board feature: keep reserved=true when using RGB in parallel with other peripherals on 48 is not recommended.",
+    "PSRAM N8R8 variant uses Octal memory pins (33-37); those remain reserved by memory mode per Device DB.",
+    "USB_D-/USB_D+ are not USBJTAG-reconfigurable in most devkit; the Pin Planner keeps them user-accessible (strapping/USBJtag restrictions come from Device DB).",
+    "GPIO43/44 (U0TXD/U0RXD) drive the on-board USB-to-UART bridge, hence onboardPins: uart0 on 43/44 is the intended wiring and is not reported, while any other owner on those pins raises a board-level warning."
+  ]
+}

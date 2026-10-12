@@ -1,0 +1,42 @@
+{
+  "id": "esp32-c6-devkitm-1",
+  "name": "ESP32-C6-DevKitM-1 (MINI-1)",
+  "vendor": "espressif",
+  "targetChip": "esp32c6",
+  "package": "QFN-40",
+  "source": {
+    "document": "ESP32-C6-DevKitM-1 User Guide",
+    "version": "latest",
+    "url": "https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32c6/esp32-c6-devkitm-1/user_guide.html"
+  },
+  "pins": [
+    { "gpio": 8,  "label": "RGB LED / GPIO8", "reserved": true },
+    { "gpio": 9,  "label": "BOOT / GPIO9" },
+    { "gpio": 12, "label": "USB_D- / GPIO12" },
+    { "gpio": 13, "label": "USB_D+ / GPIO13" },
+    { "gpio": 16, "label": "U0TXD / GPIO16 (J3.2, on-board USB-to-UART bridge)" },
+    { "gpio": 17, "label": "U0RXD / GPIO17 (J3.3, on-board USB-to-UART bridge)" }
+  ],
+  "reservedGpios": [8],
+  "onboardPins": [
+    { "gpio": 16, "usage": "on-board USB-to-UART bridge (U0TXD, J3.2)" },
+    { "gpio": 17, "usage": "on-board USB-to-UART bridge (U0RXD, J3.3)" }
+  ],
+  "peripherals": {
+    "uart0": { "tx": "GPIO16", "rx": "GPIO17" },
+    "spi2":  { "mosi": "GPIO19", "miso": "GPIO20", "sclk": "GPIO18", "cs": "GPIO21" },
+    "i2c0":  { "sda": "GPIO6",  "scl": "GPIO7" },
+    "ledc1": { "out": "GPIO8" }
+  },
+  "powerDomain": {
+    "default": "VDD33"
+  },
+  "notes": [
+    "ESP32-C6-DevKitM-1 carries an ESP32-C6-MINI-1(U) module with 4 MB flash inside the chip package, so no external SPI-flash pins are broken out (GPIO24-30 stay internal to the module).",
+    "RGB LED on GPIO8 is WS2812-style addressable; reserved=true by default.",
+    "BOOT button is wired to GPIO9; strapping direction is owned by the Device DB, so this profile only records the board label.",
+    "GPIO16/17 (J3.2/J3.3) drive the on-board USB-to-UART bridge, hence onboardPins. Using uart0 on 16/17 is the intended wiring; any other peripheral there conflicts with the bridge.",
+    "USB Serial/JTAG is GPIO12 (D-) / GPIO13 (D+); free for custom USB use only when the USB Type-C port is not routed to the chip.",
+    "Board revision is not pinned in the user guide (only ADC multi-point calibration changed after PW-2023-06), so source.version records the documentation channel (latest) instead of a PCB revision."
+  ]
+}

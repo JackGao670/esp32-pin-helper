@@ -1,0 +1,25 @@
+{
+  "id": "esp32s3",
+  "name": "ESP32-S3",
+  "architecture": "Xtensa",
+  "databaseVersion": "0.1.0",
+  "scope": "Logical GPIO, standard UART/I2C/SPI, LEDC channels, ADC1-2, RMT channels and I2S; logical layout, not a physical package pin map",
+  "source": {
+    "document": "ESP-IDF GPIO & RTC GPIO",
+    "version": "v5.3",
+    "url": "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/gpio.html"
+  },
+  "gpioNumbers": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48],
+  "defaultCapabilities": { "input": true, "output": true, "openDrain": true, "gpioMatrix": true },
+  "inputOnlyPins": [46],
+  "noOpenDrainPins": [47, 48],
+  "strapping": [0, 3, 45, 46],
+  "rtc": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+  "analog": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+  "adcUnits": { "1": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "2": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20] },
+  "adcWifiSharedUnits": [2],
+  "memoryPins": [26, 27, 28, 29, 30, 31, 32],
+  "octalMemoryPins": [33, 34, 35, 36, 37],
+  "usbJtag": [19, 20],
+  "functions": ["GPIO_INPUT", "GPIO_OUTPUT", "GPIO_OPEN_DRAIN"]
+}

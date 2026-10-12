@@ -1,0 +1,42 @@
+{
+  "id": "esp32-c6-devkitc-1",
+  "name": "ESP32-C6-DevKitC-1 (N8 / N16)",
+  "vendor": "espressif",
+  "targetChip": "esp32c6",
+  "default": true,
+  "package": "QFN-40",
+  "boardPcbVersion": "v1.2",
+  "source": {
+    "document": "ESP32-C6-DevKitC-1 User Guide",
+    "version": "v1.2",
+    "url": "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32c6/hw-reference/esp32c6/user-guide-devkitc-1.html"
+  },
+  "pins": [
+    { "gpio": 9,  "label": "BOOT / GPIO9", "strapDirection": "pull-up" },
+    { "gpio": 8,  "label": "RGB LED / GPIO8", "reserved": true },
+    { "gpio": 12, "label": "USB_D- / GPIO12" },
+    { "gpio": 13, "label": "USB_D+ / GPIO13" },
+    { "gpio": 14, "label": "MTMS / GPIO14 (Strapping)" },
+    { "gpio": 15, "label": "MTDO / GPIO15 (Strapping, Input-only on some)" }
+  ],
+  "reservedGpios": [8],
+  "onboardPins": [
+    { "gpio": 16, "usage": "on-board USB-to-UART bridge (U0TXD)" },
+    { "gpio": 17, "usage": "on-board USB-to-UART bridge (U0RXD)" }
+  ],
+  "peripherals": {
+    "uart0": { "tx": "GPIO16", "rx": "GPIO17" },
+    "spi2":  { "mosi": "GPIO19", "miso": "GPIO20", "sclk": "GPIO18", "cs": "GPIO21" },
+    "i2c0":  { "sda": "GPIO6",  "scl": "GPIO7" },
+    "ledc1": { "out": "GPIO8" }
+  },
+  "powerDomain": {
+    "default": "VDD33"
+  },
+  "notes": [
+    "RGB LED on GPIO8 is WS2812-style addressable; reserved=true by default.",
+    "BOOT is GPIO9 (strapping, external pull-up on board).",
+    "USB Serial/JTAG is GPIO12 (D-) / GPIO13 (D+); free for custom USB use only when the USB port is not routed to the chip.",
+    "GPIO16/17 (U0TXD/U0RXD) drive the on-board USB-to-UART bridge, hence onboardPins: uart0 on 16/17 is the intended wiring and is not reported, while any other owner on those pins raises a board-level warning."
+  ]
+}

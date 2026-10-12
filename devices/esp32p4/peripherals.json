@@ -1,0 +1,126 @@
+{
+  "databaseVersion": "0.1.0",
+  "chip": "esp32p4",
+  "sources": [
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/uart.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/i2c.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/spi_slave.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/spi_master.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/ledc.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/adc_oneshot.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/rmt.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/i2s.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/lcd.html#rgb-interfaces",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/lcd.html#mipi-dsi-interfaces",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/cam_ctlr_cam_dvp.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/cam_ctlr_cam_ctlr_mipi.html",
+    "https://www.espressif.com/sites/default/files/documentation/esp32-p4_datasheet_en.pdf (Ch. 2.1.3 High-Speed I/O Matrix + MIPI I/O Domain)"
+  ],
+  "scope": "Standard UART0-4, HP I2C0-1, SPI2 standard master, LEDC channels, ADC1, RMT channels and I2S master only; other SPI hosts, LP and high-speed modes not modeled. P4 datasheet lists a second ADC controller but its external channels are not identified in the GPIO summary, so ADC2 is not modeled. RMT channels are modeled as one GPIO per channel without TX/RX direction.\n\nDisplay/Camera peripherals: (1) camera0 = DVP 8-bit Camera interface routed through GPIOMatrix (same as ESP32-S3 LCD_CAM CAM DVP channel). (2) camera1 = MIPI CSI-2 2-lane receiver with dedicated differential pads: CLKP/CLKN + DATAP0/DATAN0 (lane 0 required for 1-lane mode), DATAP1/DATAN1 (lane 1 optional for 2-lane mode), refclk (output from P4, optional GPIO) and xclk/csi_enable/dvp_enable (optional GPIO-level control pads). MIPI pads are in VDD_MIPI_DPHY dedicated I/O domain, NOT routable through GPIOMatrix. (3) lcd0 = RGB LCD parallel interface (same as ESP32-S3 LCD_CAM, up to 24-bit d0-d23 + pclk/vsync/hsync/de), GPIOMatrix routed. (4) lcd1 = MIPI DSI 4-lane (clock lane + 4 data lanes), DPHY dedicated differential pads with dedicated I/O domain; lane 0 required for 1-lane mode, lanes 1/2/3 optional for wider busses; te (Tearing Effect) input and reset optional GPIO. ISP/H.264 and LP_CAM are not modeled here.",
+  "peripherals": [
+    { "type": "uart", "instances": [0, 1, 2, 3, 4], "signals": [
+      { "id": "tx", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "rx", "direction": "input", "routing": "gpio_matrix", "required": true },
+      { "id": "rts", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "cts", "direction": "input", "routing": "gpio_matrix", "required": false }
+    ] },
+    { "type": "i2c", "instances": [0, 1], "signals": [
+      { "id": "sda", "direction": "bidirectional", "routing": "gpio_matrix", "required": true, "openDrain": true },
+      { "id": "scl", "direction": "bidirectional", "routing": "gpio_matrix", "required": true, "openDrain": true }
+    ] },
+    { "type": "spi", "instances": [2], "signals": [
+      { "id": "mosi", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "miso", "direction": "input", "routing": "gpio_matrix", "required": false },
+      { "id": "sclk", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "cs", "direction": "output", "routing": "gpio_matrix", "required": false }
+    ] },
+    { "type": "ledc", "instances": [0, 1, 2, 3, 4, 5, 6, 7], "signals": [
+      { "id": "out", "direction": "output", "routing": "gpio_matrix", "required": true }
+    ] },
+    { "type": "adc", "instances": [1], "signals": [
+      { "id": "in", "direction": "input", "routing": "analog", "required": true }
+    ] },
+    { "type": "rmt", "instances": [0, 1, 2, 3, 4, 5, 6, 7], "signals": [
+      { "id": "sig", "direction": "bidirectional", "routing": "gpio_matrix", "required": true }
+    ] },
+    { "type": "i2s", "instances": [0, 1, 2], "signals": [
+      { "id": "bclk", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "ws", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "dout", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "din", "direction": "input", "routing": "gpio_matrix", "required": false },
+      { "id": "mclk", "direction": "output", "routing": "gpio_matrix", "required": false }
+    ] },
+    { "type": "camera", "instances": [0], "signals": [
+      { "id": "xclk", "direction": "output", "routing": "gpio_matrix", "required": true, "description": "DVP camera master clock output (CAM_XCLK)" },
+      { "id": "pclk", "direction": "input", "routing": "gpio_matrix", "required": true, "description": "DVP pixel clock input from sensor" },
+      { "id": "vsync", "direction": "input", "routing": "gpio_matrix", "required": true, "description": "Vertical sync input" },
+      { "id": "href", "direction": "input", "routing": "gpio_matrix", "required": true, "description": "Horizontal reference / HSYNC input" },
+      { "id": "d0", "direction": "input", "routing": "gpio_matrix", "required": true, "description": "Parallel data line bit 0 (8-bit baseline bus)" },
+      { "id": "d1", "direction": "input", "routing": "gpio_matrix", "required": true },
+      { "id": "d2", "direction": "input", "routing": "gpio_matrix", "required": true },
+      { "id": "d3", "direction": "input", "routing": "gpio_matrix", "required": true },
+      { "id": "d4", "direction": "input", "routing": "gpio_matrix", "required": true },
+      { "id": "d5", "direction": "input", "routing": "gpio_matrix", "required": true },
+      { "id": "d6", "direction": "input", "routing": "gpio_matrix", "required": true },
+      { "id": "d7", "direction": "input", "routing": "gpio_matrix", "required": true, "description": "Parallel data line bit 7" },
+      { "id": "pwdn", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Power-down (active high) to sensor, optional" },
+      { "id": "reset", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Hardware reset (active low) to sensor, optional" }
+    ] },
+    { "type": "camera_mipi", "instances": [0], "signals": [
+      { "id": "csi_clkp", "direction": "input", "routing": "dedicated", "required": true, "description": "MIPI CSI-2 differential clock positive lane (dedicated pad in MIPI DPHY domain)" },
+      { "id": "csi_clkn", "direction": "input", "routing": "dedicated", "required": true, "description": "MIPI CSI-2 differential clock negative lane" },
+      { "id": "csi_d0p", "direction": "bidirectional", "routing": "dedicated", "required": true, "description": "MIPI CSI-2 data lane 0 positive (minimum 1-lane config)" },
+      { "id": "csi_d0n", "direction": "bidirectional", "routing": "dedicated", "required": true, "description": "MIPI CSI-2 data lane 0 negative" },
+      { "id": "csi_d1p", "direction": "bidirectional", "routing": "dedicated", "required": false, "description": "MIPI CSI-2 data lane 1 positive (2-lane mode, optional)" },
+      { "id": "csi_d1n", "direction": "bidirectional", "routing": "dedicated", "required": false, "description": "MIPI CSI-2 data lane 1 negative" },
+      { "id": "xclk", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Optional sensor master clock output via GPIO matrix" },
+      { "id": "pwdn", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Optional sensor power-down control" },
+      { "id": "reset", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Optional sensor reset control" }
+    ] },
+    { "type": "lcd", "instances": [0], "signals": [
+      { "id": "pclk", "direction": "output", "routing": "gpio_matrix", "required": true, "description": "RGB LCD pixel clock output" },
+      { "id": "vsync", "direction": "output", "routing": "gpio_matrix", "required": true, "description": "Vertical sync output" },
+      { "id": "hsync", "direction": "output", "routing": "gpio_matrix", "required": true, "description": "Horizontal sync output" },
+      { "id": "de", "direction": "output", "routing": "gpio_matrix", "required": true, "description": "Data enable output" },
+      { "id": "d0", "direction": "output", "routing": "gpio_matrix", "required": true, "description": "RGB data bit 0 (8-bit baseline)" },
+      { "id": "d1", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "d2", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "d3", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "d4", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "d5", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "d6", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "d7", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "d8", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "RGB data bit 8 (start of 16-bit bus extension)" },
+      { "id": "d9", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d10", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d11", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d12", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d13", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d14", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d15", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d16", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "RGB data bit 16 (start of 24-bit bus extension)" },
+      { "id": "d17", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d18", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d19", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d20", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d21", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d22", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d23", "direction": "output", "routing": "gpio_matrix", "required": false }
+    ] },
+    { "type": "lcd_mipi", "instances": [0], "signals": [
+      { "id": "dsi_clkp", "direction": "output", "routing": "dedicated", "required": true, "description": "MIPI DSI differential clock lane positive (MIPI DPHY dedicated pad)" },
+      { "id": "dsi_clkn", "direction": "output", "routing": "dedicated", "required": true, "description": "MIPI DSI differential clock lane negative" },
+      { "id": "dsi_d0p", "direction": "bidirectional", "routing": "dedicated", "required": true, "description": "MIPI DSI data lane 0 positive (minimum 1-lane config)" },
+      { "id": "dsi_d0n", "direction": "bidirectional", "routing": "dedicated", "required": true, "description": "MIPI DSI data lane 0 negative" },
+      { "id": "dsi_d1p", "direction": "bidirectional", "routing": "dedicated", "required": false, "description": "MIPI DSI data lane 1 positive (optional 2-lane)" },
+      { "id": "dsi_d1n", "direction": "bidirectional", "routing": "dedicated", "required": false },
+      { "id": "dsi_d2p", "direction": "bidirectional", "routing": "dedicated", "required": false, "description": "MIPI DSI data lane 2 positive (optional 3-lane)" },
+      { "id": "dsi_d2n", "direction": "bidirectional", "routing": "dedicated", "required": false },
+      { "id": "dsi_d3p", "direction": "bidirectional", "routing": "dedicated", "required": false, "description": "MIPI DSI data lane 3 positive (optional 4-lane, P4 max)" },
+      { "id": "dsi_d3n", "direction": "bidirectional", "routing": "dedicated", "required": false },
+      { "id": "te", "direction": "input", "routing": "gpio_matrix", "required": false, "description": "Tearing Effect input from panel (routed via GPIOMatrix)" },
+      { "id": "reset", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Optional panel hardware reset (active low, GPIOMatrix routed)" },
+      { "id": "bl_pwm", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Optional backlight PWM control (GPIOMatrix routed)" }
+    ] }
+  ]
+}

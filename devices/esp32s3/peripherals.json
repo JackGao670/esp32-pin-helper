@@ -1,0 +1,132 @@
+{
+  "databaseVersion": "0.1.0",
+  "chip": "esp32s3",
+  "sources": [
+    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/uart.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/i2c.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/spi_master.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/ledc.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/adc_oneshot.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/rmt.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/i2s.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/lcd.html#rgb-lcd",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/cam_dvp.html"
+  ],
+  "scope": "UART full duplex, I2C, standard SPI master, LEDC channels, ADC1/ADC2, RMT channels and I2S master; no high-speed timing validation. RMT TX/RX direction is not enforced (S3 channels 0-3 are TX-only and 4-7 RX-only). ADC2 shares hardware with Wi-Fi. Camera (DVP, 8-bit) and LCD (RGB, up to 16-bit documented; 24-bit signal pins are reserved as optional) are modeled at the baseline GPIOMatrix routing level; signal integrity and pixel clock constraints are NOT yet validated. Sensor and panel reset/powerdown pins are declared so the planner can reserve them.",
+  "peripherals": [
+    {
+      "type": "uart",
+      "instances": [0, 1, 2],
+      "signals": [
+        { "id": "tx", "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "rx", "direction": "input", "routing": "gpio_matrix", "required": true },
+        { "id": "rts", "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "cts", "direction": "input", "routing": "gpio_matrix", "required": false }
+      ]
+    },
+    {
+      "type": "i2c",
+      "instances": [0, 1],
+      "signals": [
+        { "id": "sda", "direction": "bidirectional", "routing": "gpio_matrix", "required": true, "openDrain": true },
+        { "id": "scl", "direction": "bidirectional", "routing": "gpio_matrix", "required": true, "openDrain": true }
+      ]
+    },
+    {
+      "type": "spi",
+      "instances": [2, 3],
+      "signals": [
+        { "id": "mosi", "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "miso", "direction": "input", "routing": "gpio_matrix", "required": false },
+        { "id": "sclk", "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "cs", "direction": "output", "routing": "gpio_matrix", "required": false }
+      ]
+    },
+    {
+      "type": "ledc",
+      "instances": [0, 1, 2, 3, 4, 5, 6, 7],
+      "signals": [
+        { "id": "out", "direction": "output", "routing": "gpio_matrix", "required": true }
+      ]
+    },
+    {
+      "type": "adc",
+      "instances": [1, 2],
+      "signals": [
+        { "id": "in", "direction": "input", "routing": "analog", "required": true }
+      ]
+    },
+    {
+      "type": "rmt",
+      "instances": [0, 1, 2, 3, 4, 5, 6, 7],
+      "signals": [
+        { "id": "sig", "direction": "bidirectional", "routing": "gpio_matrix", "required": true }
+      ]
+    },
+    {
+      "type": "i2s",
+      "instances": [0, 1],
+      "signals": [
+        { "id": "bclk", "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "ws", "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "dout", "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "din", "direction": "input", "routing": "gpio_matrix", "required": false },
+        { "id": "mclk", "direction": "output", "routing": "gpio_matrix", "required": false }
+      ]
+    },
+    {
+      "type": "camera",
+      "instances": [0],
+      "signals": [
+        { "id": "xclk",   "direction": "output", "routing": "gpio_matrix", "required": true,  "description": "Sensor master clock output (usually 24 MHz for OV2640)." },
+        { "id": "pclk",   "direction": "input",  "routing": "gpio_matrix", "required": true,  "description": "Sensor pixel clock input. Sampling edge (rising/falling) is not modeled at this stage." },
+        { "id": "vsync",  "direction": "input",  "routing": "gpio_matrix", "required": true,  "description": "Vertical sync active-high frame delimiter input." },
+        { "id": "href",   "direction": "input",  "routing": "gpio_matrix", "required": true,  "description": "Horizontal reference / valid-data window input." },
+        { "id": "d0",     "direction": "input",  "routing": "gpio_matrix", "required": true,  "description": "8-bit parallel data bit 0 (baseline, DVP 8-bit mode)." },
+        { "id": "d1",     "direction": "input",  "routing": "gpio_matrix", "required": true },
+        { "id": "d2",     "direction": "input",  "routing": "gpio_matrix", "required": true },
+        { "id": "d3",     "direction": "input",  "routing": "gpio_matrix", "required": true },
+        { "id": "d4",     "direction": "input",  "routing": "gpio_matrix", "required": true },
+        { "id": "d5",     "direction": "input",  "routing": "gpio_matrix", "required": true },
+        { "id": "d6",     "direction": "input",  "routing": "gpio_matrix", "required": true },
+        { "id": "d7",     "direction": "input",  "routing": "gpio_matrix", "required": true },
+        { "id": "pwdn",   "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Sensor PWDN / power-down control output (active-high on OV2640/OV5640)." },
+        { "id": "reset",  "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Sensor RESETb / hardware reset output (active-low on OV2640/OV5640)." }
+      ]
+    },
+    {
+      "type": "lcd",
+      "instances": [0],
+      "signals": [
+        { "id": "pclk",   "direction": "output", "routing": "gpio_matrix", "required": true,  "description": "LCD pixel clock output. Panel-specified MHz limit is not yet validated." },
+        { "id": "vsync",  "direction": "output", "routing": "gpio_matrix", "required": true,  "description": "Vertical sync output (frame start)." },
+        { "id": "hsync",  "direction": "output", "routing": "gpio_matrix", "required": true,  "description": "Horizontal sync output (line start)." },
+        { "id": "de",     "direction": "output", "routing": "gpio_matrix", "required": true,  "description": "Data-enable (high during active pixel burst)." },
+        { "id": "d0",     "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "d1",     "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "d2",     "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "d3",     "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "d4",     "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "d5",     "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "d6",     "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "d7",     "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "d8",     "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Optional data bit 8 (16/24-bit RGB modes)." },
+        { "id": "d9",     "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d10",    "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d11",    "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d12",    "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d13",    "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d14",    "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d15",    "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d16",    "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Optional data bit 16 (24-bit RGB888 mode only)." },
+        { "id": "d17",    "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d18",    "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d19",    "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d20",    "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d21",    "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d22",    "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d23",    "direction": "output", "routing": "gpio_matrix", "required": false }
+      ]
+    }
+  ]
+}
