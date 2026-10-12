@@ -248,3 +248,51 @@ test("ESP32-P4 MIPI CSI 1-lane baseline + 2-lane completeness; MIPI DSI lane con
   dsiNoLane.peripherals!.lcd_mipi0.signals = { dsi_clkp: "GPIO30", dsi_clkn: "GPIO31" };
   assert.ok(validateGpio(dsiNoLane).some(p => /MIPI DSI 1-lane baseline missing CLK \+ lane 0 differential pairs/.test(p.message)));
 });
+
+test("USB D+/D- pair completeness is enforced on the fixed PHY pads", () => {
+  // Complete pair on S3 (GPIO19 = D-, GPIO20 = D+) → no pairing warning.
+  let usb = addPeripheral(createConfig("esp32s3"), "usb", 0);
+  usb = setSignal(usb, "usb0", "dn", 19);
+  usb = setSignal(usb, "usb0", "dp", 20);
+  assert.ok(!validateGpio(usb).some(p => /USB (DN|DP) .* is not assigned/.test(p.message)),
+    "fully assigned USB D+/D- pair should not warn about pairing");
+
+  // Only D+ assigned → warn that D- is missing.
+  let half = addPeripheral(createConfig("esp32s3"), "usb", 0);
+  half = setSignal(half, "usb0", "dp", 20);
+  assert.ok(validateGpio(half).some(p => /USB DN \(D-\) is not assigned/.test(p.message)),
+    "USB with only D+ must warn that D- is missing");
+
+  // Pads are fixed: a GPIO outside the dedicated pad list is an invalid route.
+  const wrongPad = setSignal(half, "usb0", "dn", 5);
+  assert.ok(validateGpio(wrongPad).some(p => /usb0\.dn: invalid signal or GPIO route/.test(p.message)),
+    "USB D- must only accept the dedicated pad GPIO");
+  // C6 models the fixed USB Serial/JTAG pads (D- = GPIO12, D+ = GPIO13).
+  const c6Def = definition("usb", 0, "esp32c6")!;
+  assert.deepEqual(c6Def.signals.map(s => s.gpio![0]), [12, 13]);
+});
+
+test("LCD 8080 (i80) bus flags incomplete baseline and partial 16-bit data", () => {
+  // 8-bit baseline only → no 8080 data-bus warnings.
+  const mcu8 = addPeripheral(createConfig("esp32s3"), "lcd_mcu", 0);
+  mcu8.peripherals!.lcd_mcu0.signals = { dc: "GPIO15", wr: "GPIO16",
+    d0: "GPIO1", d1: "GPIO2", d2: "GPIO3", d3: "GPIO4", d4: "GPIO5", d5: "GPIO6", d6: "GPIO7", d7: "GPIO8" };
+  assert.ok(!validateGpio(mcu8).some(p => /8080 \(i80\)/.test(p.message)),
+    "complete 8-bit i80 baseline should not warn about bus width");
+
+  // Missing data bits → baseline incomplete.
+  const mcuBad = addPeripheral(createConfig("esp32s3"), "lcd_mcu", 0);
+  mcuBad.peripherals!.lcd_mcu0.signals = { dc: "GPIO15", wr: "GPIO16", d0: "GPIO1" };
+  assert.ok(validateGpio(mcuBad).some(p => /8-bit 8080 \(i80\) data bus incomplete; missing: d1, d2, d3, d4, d5, d6, d7/.test(p.message)),
+    "missing i80 data bits must flag an incomplete 8-bit baseline");
+
+  // Partial 16-bit → warn about the missing upper byte.
+  const mcu16 = addPeripheral(createConfig("esp32s3"), "lcd_mcu", 0);
+  mcu16.peripherals!.lcd_mcu0.signals = { dc: "GPIO15", wr: "GPIO16",
+    d0: "GPIO1", d1: "GPIO2", d2: "GPIO3", d3: "GPIO4", d4: "GPIO5", d5: "GPIO6", d6: "GPIO7", d7: "GPIO8",
+    d8: "GPIO21" };
+  assert.ok(validateGpio(mcu16).some(p => /partial 16-bit 8080 \(i80\) bus; missing D8-D15 pins: d9, d10, d11, d12, d13, d14, d15/.test(p.message)),
+    "partial 16-bit i80 bus must flag missing D8-D15");
+  // C6 has no LCD_CAM, so lcd_mcu is not a known peripheral there.
+  assert.equal(definition("lcd_mcu", 0, "esp32c6"), undefined);
+});

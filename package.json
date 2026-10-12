@@ -2,19 +2,37 @@
   "name": "esp-pin-planner",
   "displayName": "ESP Pin Planner",
   "description": "Visual ESP32 pin planning without changing application source code.",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "publisher": "local-development",
   "engines": { "vscode": "^1.90.0" },
   "categories": ["Other"],
   "main": "./dist/extension.js",
-  "activationEvents": ["onCommand:espPinPlanner.open", "onCommand:espPinPlanner.validate", "onCommand:espPinPlanner.create", "onCommand:espPinPlanner.selectTarget", "workspaceContains:**/.pinconfig.json", "onLanguage:json"],
+  "activationEvents": ["onCommand:espPinPlanner.open", "onCommand:espPinPlanner.validate", "onCommand:espPinPlanner.create", "onCommand:espPinPlanner.selectTarget", "onView:espPinPlanner.home", "workspaceContains:**/.pinconfig.json", "onLanguage:json"],
   "contributes": {
     "commands": [
-      { "command": "espPinPlanner.open", "title": "Open Pin Planner", "category": "ESP Pin Planner" },
-      { "command": "espPinPlanner.validate", "title": "Validate Pin Config", "category": "ESP Pin Planner" },
-      { "command": "espPinPlanner.create", "title": "Create New Pin Config", "category": "ESP Pin Planner" },
-      { "command": "espPinPlanner.selectTarget", "title": "Select Target Chip", "category": "ESP Pin Planner" }
+      { "command": "espPinPlanner.open", "title": "Open Pin Planner", "category": "ESP Pin Planner", "icon": "$(open-preview)" },
+      { "command": "espPinPlanner.validate", "title": "Validate Pin Config", "category": "ESP Pin Planner", "icon": "$(check)" },
+      { "command": "espPinPlanner.create", "title": "Create New Pin Config", "category": "ESP Pin Planner", "icon": "$(new-file)" },
+      { "command": "espPinPlanner.selectTarget", "title": "Select Target Chip", "category": "ESP Pin Planner", "icon": "$(circuit-board)" }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        { "id": "espPinPlanner", "title": "ESP Pin Planner", "icon": "resources/pin-planner.svg" }
+      ]
+    },
+    "views": {
+      "espPinPlanner": [
+        { "id": "espPinPlanner.home", "name": "Pin Planner", "type": "webview" }
+      ]
+    },
+    "menus": {
+      "editor/title": [
+        { "command": "espPinPlanner.open", "when": "resourceFilename == .pinconfig.json", "group": "navigation@1" }
+      ],
+      "view/title": [
+        { "command": "espPinPlanner.validate", "when": "view == espPinPlanner.home", "group": "navigation@1" }
+      ]
+    },
     "jsonValidation": [{ "fileMatch": "**/.pinconfig.json", "url": "./schemas/pinconfig.schema.json" }],
     "configuration": {
       "title": "ESP Pin Planner",

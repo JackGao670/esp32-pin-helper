@@ -128,6 +128,13 @@ test("boardInfoOf: serializes labelMap + reservedGpios + defaultSignalMap for th
   assert.equal(info.defaultSignalMap.lcd_mipi0?.reset, "GPIO27");
   info.defaultSignalMap.uart0.tx = "GPIO1";
   assert.equal(p4.peripherals.uart0.tx, "GPIO37", "copy must not alias the board profile");
+
+  // onboardPins: advisory board-wired pins carried through as a copy, distinct from reservedGpios
+  assert.equal(info.onboardPins?.length, 25);
+  assert.equal(info.onboardPins?.find(p => p.gpio === 43)?.usage, "microSD slot SDMMC CLK (SD SPI CLK)");
+  assert.equal(info.reservedGpios.includes(43), false, "onboard pins are advisory, not reserved");
+  info.onboardPins![0].usage = "mutated";
+  assert.notEqual(p4.onboardPins![0].usage, "mutated", "copy must not alias the board profile");
 });
 
 test("boardRule: routes on a reserved board pin emit a warning; non-reserved pins stay silent", () => {

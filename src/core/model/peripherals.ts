@@ -5,9 +5,9 @@ import { getDevice } from "../../database/loader";
 export function selectTarget(config: PinConfigDocument, chip: string): PinConfigDocument {
   if (!getDevice(chip)) throw new Error("Unsupported target chip.");
   if (chip === config.target.chip) return config;
-  if (config.pins.length || Object.keys(config.peripherals ?? {}).length) {
-    throw new Error("Target switching requires an empty configuration. Existing assignments were not changed.");
-  }
+  // Existing assignments are preserved across chip switches. The validator re-checks
+  // every route against the new chip, so unsupported peripherals or illegal routes
+  // surface as diagnostics instead of blocking the switch.
   const { package: _package, variant: _variant, ...target } = config.target;
   return { ...config, target: { ...target, chip } };
 }

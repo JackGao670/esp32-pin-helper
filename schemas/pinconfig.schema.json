@@ -20,9 +20,9 @@
                 "adc1","adc2",
                 "rmt0","rmt1","rmt2","rmt3","rmt4","rmt5","rmt6","rmt7",
                 "i2s0","i2s1",
-                "camera0","lcd0"
+                "camera0","lcd0","lcd_mcu0","usb0"
               ],
-              "description": "ESP32-S3 (IDF v5.3): UART 0-2, I2C 0-1, SPI 2-3, LEDC 0-7, ADC 1+2, RMT 0-7, I2S 0-1, CAMERA 0 (DVP 8-bit), LCD 0 (RGB up to 24-bit)."
+              "description": "ESP32-S3 (IDF v5.3): UART 0-2, I2C 0-1, SPI 2-3, LEDC 0-7, ADC 1+2, RMT 0-7, I2S 0-1, CAMERA 0 (DVP 8-bit), LCD 0 (RGB up to 24-bit), LCD_MCU 0 (8080/i80 8-16-bit), USB 0 (fixed internal USB pads)."
             },
             "additionalProperties": {
               "allOf": [
@@ -34,7 +34,9 @@
                 { "if": { "properties": { "type": { "const": "rmt"     }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3,4,5,6,7] }}}},
                 { "if": { "properties": { "type": { "const": "i2s"     }}}, "then": { "properties": { "instance": { "enum": [0,1]           }}}},
                 { "if": { "properties": { "type": { "const": "camera"  }}}, "then": { "properties": { "instance": { "enum": [0]               }}}},
-                { "if": { "properties": { "type": { "const": "lcd"     }}}, "then": { "properties": { "instance": { "enum": [0]               }}}}
+                { "if": { "properties": { "type": { "const": "lcd"     }}}, "then": { "properties": { "instance": { "enum": [0]               }}}},
+                { "if": { "properties": { "type": { "const": "lcd_mcu" }}}, "then": { "properties": { "instance": { "enum": [0]               }}}},
+                { "if": { "properties": { "type": { "const": "usb"     }}}, "then": { "properties": { "instance": { "enum": [0]               }}}}
               ]
             }
           }
@@ -54,9 +56,9 @@
                 "ledc0","ledc1","ledc2","ledc3","ledc4","ledc5",
                 "adc1",
                 "rmt0","rmt1","rmt2","rmt3",
-                "i2s0"
+                "i2s0","usb0"
               ],
-              "description": "ESP32-C6 (IDF v5.3): UART 0-1, I2C 0 only, SPI 2 only, LEDC 0-5, ADC 1 only, RMT 0-3, I2S 0 only."
+              "description": "ESP32-C6 (IDF v5.3): UART 0-1, I2C 0 only, SPI 2 only, LEDC 0-5, ADC 1 only, RMT 0-3, I2S 0 only, USB 0 (fixed USB Serial/JTAG pads)."
             },
             "additionalProperties": {
               "allOf": [
@@ -66,7 +68,8 @@
                 { "if": { "properties": { "type": { "const": "ledc" }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3,4,5] }}}},
                 { "if": { "properties": { "type": { "const": "adc"  }}}, "then": { "properties": { "instance": { "enum": [1]     }}}},
                 { "if": { "properties": { "type": { "const": "rmt"  }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3] }}}},
-                { "if": { "properties": { "type": { "const": "i2s"  }}}, "then": { "properties": { "instance": { "enum": [0]     }}}}
+                { "if": { "properties": { "type": { "const": "i2s"  }}}, "then": { "properties": { "instance": { "enum": [0]     }}}},
+                { "if": { "properties": { "type": { "const": "usb"  }}}, "then": { "properties": { "instance": { "enum": [0]     }}}}
               ]
             }
           }
@@ -87,9 +90,9 @@
                 "adc1",
                 "rmt0","rmt1","rmt2","rmt3","rmt4","rmt5","rmt6","rmt7",
                 "i2s0","i2s1","i2s2",
-                "camera0","camera_mipi0","lcd0","lcd_mipi0"
+                "camera0","camera_mipi0","lcd0","lcd_mcu0","lcd_mipi0","usb0"
               ],
-              "description": "ESP32-P4 (IDF v5.4): UART 0-4, I2C 0-1, SPI 2 only, LEDC 0-7, ADC 1 only, RMT 0-7, I2S 0-2, DVP Camera 0, MIPI CSI-2 Camera 0 (2 lane), RGB LCD 0 (up to 24-bit), MIPI DSI LCD 0 (up to 4 lane)."
+              "description": "ESP32-P4 (IDF v5.4): UART 0-4, I2C 0-1, SPI 2 only, LEDC 0-7, ADC 1 only, RMT 0-7, I2S 0-2, DVP Camera 0, MIPI CSI-2 Camera 0 (2 lane), RGB LCD 0 (up to 24-bit), LCD_MCU 0 (8080/i80 8-16-bit), MIPI DSI LCD 0 (up to 4 lane), USB 0."
             },
             "additionalProperties": {
               "allOf": [
@@ -103,7 +106,9 @@
                 { "if": { "properties": { "type": { "const": "camera"       }}}, "then": { "properties": { "instance": { "enum": [0] }}}},
                 { "if": { "properties": { "type": { "const": "camera_mipi"  }}}, "then": { "properties": { "instance": { "enum": [0] }}}},
                 { "if": { "properties": { "type": { "const": "lcd"          }}}, "then": { "properties": { "instance": { "enum": [0] }}}},
-                { "if": { "properties": { "type": { "const": "lcd_mipi"     }}}, "then": { "properties": { "instance": { "enum": [0] }}}}
+                { "if": { "properties": { "type": { "const": "lcd_mcu"      }}}, "then": { "properties": { "instance": { "enum": [0] }}}},
+                { "if": { "properties": { "type": { "const": "lcd_mipi"     }}}, "then": { "properties": { "instance": { "enum": [0] }}}},
+                { "if": { "properties": { "type": { "const": "usb"          }}}, "then": { "properties": { "instance": { "enum": [0] }}}}
               ]
             }
           }
@@ -194,8 +199,8 @@
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["uart", "i2c", "spi", "ledc", "adc", "rmt", "i2s", "camera", "lcd", "camera_mipi", "lcd_mipi"],
-          "description": "Peripheral type. Unknown types produce an Unsupported diagnostic. camera/lcd = parallel DVP / RGB via GPIOMatrix; camera_mipi / lcd_mipi = MIPI CSI-2 / DSI with dedicated differential pads (ESP32-P4 only)."
+          "enum": ["uart", "i2c", "spi", "ledc", "adc", "rmt", "i2s", "camera", "lcd", "lcd_mcu", "camera_mipi", "lcd_mipi", "usb"],
+          "description": "Peripheral type. Unknown types produce an Unsupported diagnostic. camera/lcd = parallel DVP / RGB via GPIOMatrix; lcd_mcu = 8080 (i80) parallel LCD bus; camera_mipi / lcd_mipi = MIPI CSI-2 / DSI with dedicated differential pads (ESP32-P4 only); usb = fixed internal USB PHY pads (D+/D- pair)."
         },
         "instance": { "type": "integer", "minimum": 0, "title": "Peripheral instance",
           "description": "Instance numbers are chip-specific: e.g. UART max is 2 on S3, 1 on C6, 4 on P4."
@@ -275,6 +280,22 @@
           "then": {
             "properties": {
               "signals": { "$ref": "#/definitions/signals-lcd" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "lcd_mcu" } } },
+          "then": {
+            "properties": {
+              "signals": { "$ref": "#/definitions/signals-lcd-mcu" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "usb" } } },
+          "then": {
+            "properties": {
+              "signals": { "$ref": "#/definitions/signals-usb" }
             }
           }
         },
@@ -419,6 +440,42 @@
         "d22":   { "$ref": "#/definitions/gpioRef" },
         "d23":   { "$ref": "#/definitions/gpioRef", "description": "Data bit 23 (optional — 24-bit RGB888 mode)." }
       }
+    },
+    "signals-lcd-mcu": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dc":  { "$ref": "#/definitions/gpioRef", "description": "Data/command select (RS) for the 8080 (i80) bus (required)." },
+        "wr":  { "$ref": "#/definitions/gpioRef", "description": "Write strobe; panel latches data on the active edge (required)." },
+        "rd":  { "$ref": "#/definitions/gpioRef", "description": "Read strobe (optional; write-only panels leave it unconnected)." },
+        "cs":  { "$ref": "#/definitions/gpioRef", "description": "Chip select (optional; often tied active on single-panel boards)." },
+        "d0":  { "$ref": "#/definitions/gpioRef", "description": "8080 parallel data bit 0 (required for 8-bit baseline bus)." },
+        "d1":  { "$ref": "#/definitions/gpioRef", "description": "8080 parallel data bit 1 (required)." },
+        "d2":  { "$ref": "#/definitions/gpioRef", "description": "8080 parallel data bit 2 (required)." },
+        "d3":  { "$ref": "#/definitions/gpioRef", "description": "8080 parallel data bit 3 (required)." },
+        "d4":  { "$ref": "#/definitions/gpioRef", "description": "8080 parallel data bit 4 (required)." },
+        "d5":  { "$ref": "#/definitions/gpioRef", "description": "8080 parallel data bit 5 (required)." },
+        "d6":  { "$ref": "#/definitions/gpioRef", "description": "8080 parallel data bit 6 (required)." },
+        "d7":  { "$ref": "#/definitions/gpioRef", "description": "8080 parallel data bit 7 (required)." },
+        "d8":  { "$ref": "#/definitions/gpioRef", "description": "8080 parallel data bit 8 (optional — 16-bit bus extension)." },
+        "d9":  { "$ref": "#/definitions/gpioRef" },
+        "d10": { "$ref": "#/definitions/gpioRef" },
+        "d11": { "$ref": "#/definitions/gpioRef" },
+        "d12": { "$ref": "#/definitions/gpioRef" },
+        "d13": { "$ref": "#/definitions/gpioRef" },
+        "d14": { "$ref": "#/definitions/gpioRef" },
+        "d15": { "$ref": "#/definitions/gpioRef", "description": "8080 parallel data bit 15 (optional — 16-bit bus maximum)." }
+      },
+      "description": "LCD 8080 (i80) parallel interface (ESP32-S3 / ESP32-P4 LCD_CAM). DC + WR are required, RD/CS optional; the data bus has an 8-bit baseline (d0-d7) extendable to 16-bit (d8-d15). Routed through GPIOMatrix."
+    },
+    "signals-usb": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dn": { "$ref": "#/definitions/gpioRef", "description": "USB D- on the fixed internal USB PHY pad (required; pair with dp)." },
+        "dp": { "$ref": "#/definitions/gpioRef", "description": "USB D+ on the fixed internal USB PHY pad (required; pair with dn)." }
+      },
+      "description": "Fixed internal USB PHY pads. D+ and D- must always be routed together; the pads are usually shared with the USB Serial/JTAG controller and are NOT GPIOMatrix-routed. Values are the dedicated pad GPIO numbers."
     },
     "signals-camera-mipi": {
       "type": "object",

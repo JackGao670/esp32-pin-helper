@@ -10,9 +10,10 @@
     "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/rmt.html",
     "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/i2s.html",
     "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/lcd.html#rgb-lcd",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/lcd/i80_lcd.html",
     "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/cam_dvp.html"
   ],
-  "scope": "UART full duplex, I2C, standard SPI master, LEDC channels, ADC1/ADC2, RMT channels and I2S master; no high-speed timing validation. RMT TX/RX direction is not enforced (S3 channels 0-3 are TX-only and 4-7 RX-only). ADC2 shares hardware with Wi-Fi. Camera (DVP, 8-bit) and LCD (RGB, up to 16-bit documented; 24-bit signal pins are reserved as optional) are modeled at the baseline GPIOMatrix routing level; signal integrity and pixel clock constraints are NOT yet validated. Sensor and panel reset/powerdown pins are declared so the planner can reserve them.",
+  "scope": "UART full duplex, I2C, standard SPI master, LEDC channels, ADC1/ADC2, RMT channels and I2S master; no high-speed timing validation. RMT TX/RX direction is not enforced (S3 channels 0-3 are TX-only and 4-7 RX-only). ADC2 shares hardware with Wi-Fi. Camera (DVP, 8-bit) and LCD (RGB, up to 16-bit documented; 24-bit signal pins are reserved as optional) are modeled at the baseline GPIOMatrix routing level; signal integrity and pixel clock constraints are NOT yet validated. Sensor and panel reset/powerdown pins are declared so the planner can reserve them. Usb0 models the fixed internal-USB pads (D- = GPIO19, D+ = GPIO20) shared with USB Serial/JTAG; the D+/D- pair must be routed together. lcd_mcu0 models the LCD 8080 (i80) parallel interface (DC/WR + optional RD/CS and an 8-bit baseline data bus d0-d7, extendable to 16-bit d8-d15) routed through GPIOMatrix; the i80 data-bus width is validated.",
   "peripherals": [
     {
       "type": "uart",
@@ -75,6 +76,14 @@
       ]
     },
     {
+      "type": "usb",
+      "instances": [0],
+      "signals": [
+        { "id": "dn", "direction": "bidirectional", "routing": "dedicated", "gpio": [19], "required": true, "description": "USB D- (USB PHY negative data line) on the fixed internal-USB pads. GPIO19 also carries the default USB Serial/JTAG function." },
+        { "id": "dp", "direction": "bidirectional", "routing": "dedicated", "gpio": [20], "required": true, "description": "USB D+ (USB PHY positive data line) on the fixed internal-USB pads. GPIO20 also carries the default USB Serial/JTAG function." }
+      ]
+    },
+    {
       "type": "camera",
       "instances": [0],
       "signals": [
@@ -126,6 +135,32 @@
         { "id": "d21",    "direction": "output", "routing": "gpio_matrix", "required": false },
         { "id": "d22",    "direction": "output", "routing": "gpio_matrix", "required": false },
         { "id": "d23",    "direction": "output", "routing": "gpio_matrix", "required": false }
+      ]
+    },
+    {
+      "type": "lcd_mcu",
+      "instances": [0],
+      "signals": [
+        { "id": "dc",  "direction": "output", "routing": "gpio_matrix", "required": true,  "description": "Data/command select (a.k.a. RS) for the 8080 (i80) bus." },
+        { "id": "wr",  "direction": "output", "routing": "gpio_matrix", "required": true,  "description": "Write strobe; the panel latches data on the active edge." },
+        { "id": "rd",  "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Read strobe (optional; write-only panels leave it unconnected)." },
+        { "id": "cs",  "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Chip select (optional; often tied active on single-panel boards)." },
+        { "id": "d0",  "direction": "output", "routing": "gpio_matrix", "required": true,  "description": "8080 parallel data bit 0 (8-bit baseline bus)." },
+        { "id": "d1",  "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "d2",  "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "d3",  "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "d4",  "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "d5",  "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "d6",  "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "d7",  "direction": "output", "routing": "gpio_matrix", "required": true },
+        { "id": "d8",  "direction": "output", "routing": "gpio_matrix", "required": false, "description": "8080 parallel data bit 8 (start of 16-bit bus extension)." },
+        { "id": "d9",  "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d10", "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d11", "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d12", "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d13", "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d14", "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "d15", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "8080 parallel data bit 15 (16-bit bus maximum on ESP32-S3)." }
       ]
     }
   ]

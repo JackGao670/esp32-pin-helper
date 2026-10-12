@@ -29,6 +29,7 @@ function makeMock(options: { quickPickTarget?: string; cancelQuickPick?: boolean
   const diagnosticListeners: Record<string, (...args: any[]) => any> = {};
   let currentDiagnostics: { message: string; code?: string }[] = [];
   const commands: Record<string, (...args: any[]) => any> = {};
+  const viewProviders: Record<string, any> = {};
   let focus: number | undefined;
   let savedUri: string | undefined;
   let plannerSettings: Record<string, unknown> = {
@@ -80,12 +81,13 @@ function makeMock(options: { quickPickTarget?: string; cancelQuickPick?: boolean
       return noopDisposable;
     } },
     workspace: {
-      workspaceFolders: [{ uri }],
+      workspaceFolders: [{ uri, name: "test" }],
       getWorkspaceFolder: () => ({ uri }),
       findFiles: async () => disk === undefined ? [] : [uri],
       onDidOpenTextDocument: () => noopDisposable,
       onDidCloseTextDocument: () => noopDisposable,
       onDidChangeWorkspaceFolders: () => noopDisposable,
+      onDidChangeConfiguration: () => noopDisposable,
       get textDocuments() { return document ? [document] : []; },
       getConfiguration: (section: string) => {
         if (section !== "espPinPlanner") return { get: () => undefined };
@@ -143,7 +145,8 @@ function makeMock(options: { quickPickTarget?: string; cancelQuickPick?: boolean
         return items[0];
       },
       showErrorMessage: async (message: string) => { errorMessage = message; },
-      showWorkspaceFolderPick: async () => undefined
+      showWorkspaceFolderPick: async () => undefined,
+      registerWebviewViewProvider: (id: string, provider: any) => { viewProviders[id] = provider; return noopDisposable; }
     }
   };
   return {
@@ -175,6 +178,13 @@ function makeMock(options: { quickPickTarget?: string; cancelQuickPick?: boolean
     setPlannerSettings(patch: Record<string, unknown>) { Object.assign(plannerSettings, patch); },
     resetPlannerSettings() {
       plannerSettings = { defaultTarget: "esp32s3", schemaStrictInstance: true, rmtChannelBank: "auto" };
+    },
+    async resolveHomeView() {
+      const provider = viewProviders["espPinPlanner.home"];
+      const view: any = { webview: { html: "", cspSource: "test", options: undefined }, onDidDispose: () => noopDisposable };
+      provider.resolveWebviewView(view, {}, {});
+      await settle(10);
+      return view;
     },
     mock
   };
@@ -322,14 +332,14 @@ test("extension message flow saves, reloads and protects external edits", async 
   await settle();
   assert.equal(JSON.parse(ctx.disk.current!).target.chip, "esp32c6");
 
-  // Once pins exist, webview selectTarget must refuse and not overwrite.
+  // Once a pin exists, the webview selectTarget still swaps chips and keeps the assignment.
   ctx.listeners.message({ type: "setPin", gpio: 22, function: "GPIO_OUTPUT", revision: ctx.last.current!.state.revision });
   await settle();
-  const beforeSwitch = ctx.disk.current;
   ctx.listeners.message({ type: "selectTarget", chip: "esp32s3", revision: ctx.last.current!.state.revision });
   await settle();
-  assert.equal(ctx.disk.current, beforeSwitch);
-  assert.match(ctx.last.current!.state.notice, /empty configuration|Target switching requires an empty config/);
+  const retargeted = JSON.parse(ctx.disk.current!);
+  assert.equal(retargeted.target.chip, "esp32s3");
+  assert.equal(retargeted.pins[0].gpio, 22);
 });
 
 test("extension espPinPlanner.selectTarget command respects assignments, picks user choice and reports baseline conflicts", async () => {
@@ -362,19 +372,20 @@ test("extension espPinPlanner.selectTarget command respects assignments, picks u
   await settle();
   assert.equal(ctx3.disk.current, before);
 
-  // Case 4: assignments exist but user picks a different chip → core selectTarget refuses, command error message is emitted, disk unchanged.
+  // Case 4: assignments exist and the user picks a different chip → assignments are kept,
+  // the file is rewritten and an informational message notes the re-check.
   const ctx4 = makeMock();
   activate(bundle, ctx4);
   const withAssignment = createConfig("esp32s3");
   withAssignment.pins = [{ gpio: 42, function: "GPIO_OUTPUT" }];
   ctx4.disk.current = serializeConfig(withAssignment);
   ctx4.setQuickPickTarget("esp32p4");
-  ctx4.errorMessage.clear();
+  ctx4.infoMessage.clear();
   await ctx4.commands["espPinPlanner.selectTarget"]();
   await settle();
-  assert.match(ctx4.errorMessage.current, /empty configuration|Target switching requires an empty config/);
-  assert.equal(JSON.parse(ctx4.disk.current!).target.chip, "esp32s3");
+  assert.equal(JSON.parse(ctx4.disk.current!).target.chip, "esp32p4");
   assert.equal(JSON.parse(ctx4.disk.current!).pins[0].gpio, 42);
+  assert.match(ctx4.infoMessage.current, /Target changed to esp32p4/);
 
   // Case 5: file exists but JSON is invalid → command surfaces parse error.
   const ctx5 = makeMock();
@@ -558,5 +569,31 @@ test("user settings: defaultTarget drives create/open fallback; schemaStrictInst
     "rmtChannelBank=rx should keep TX-only warnings (miswire)");
   assert.equal(rxMsgs.some(d => /RMT channel 4 is RX-only/.test(d.message)), false,
     "rmtChannelBank=rx should suppress RX-only bank warnings");
+});
+
+test("extension home view is the discoverable entry point: status rows + command links", async () => {
+  const bundle = await bundleExtension();
+
+  // No file on disk: the view offers to create/open instead of showing status rows.
+  const ctx = makeMock();
+  activate(bundle, ctx);
+  const empty = await ctx.resolveHomeView();
+  assert.equal(empty.description, "test", "view description tracks the workspace folder");
+  assert.match(empty.webview.html, /No \.pinconfig\.json in test/);
+  assert.match(empty.webview.html, /command:espPinPlanner\.create/);
+  assert.equal(empty.webview.options.enableCommandUris, true, "command: links need enableCommandUris");
+  assert.equal(empty.webview.options.enableScripts, false, "the home view ships no scripts");
+
+  // Existing S3 configuration: chip, board and problem counts are summarised.
+  ctx.disk.current = serializeConfig(createConfig("esp32s3"));
+  const ready = await ctx.resolveHomeView();
+  assert.match(ready.webview.html, /ESP32-S3-DevKitC-1/);
+  assert.match(ready.webview.html, /0 errors/);
+  assert.match(ready.webview.html, /command:espPinPlanner\.validate/);
+
+  // Unparsable configuration: the view degrades to the parser error instead of throwing.
+  ctx.disk.current = "{";
+  const broken = await ctx.resolveHomeView();
+  assert.match(broken.webview.html, /could not be parsed/);
 });
 

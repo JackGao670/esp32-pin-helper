@@ -8,6 +8,9 @@ export interface BoardInfo {
   labelMap: Record<string, string>;
   reservedGpios: number[];
   defaultSignalMap: Record<string, Record<string, string>>;
+  // Board-wired pins (USB-UART bridge, SD slot, Ethernet PHY, shared I2C…) — advisory: reusable, but the
+  // on-board device stops working. Distinct from reservedGpios, which must not be reused.
+  onboardPins?: { gpio: number; usage: string }[];
 }
 
 export interface PlannerState {

@@ -62,6 +62,9 @@ aside { padding: 24px 20px; background: var(--panel); }
 }
 .legend .reserved .dot { background: #c49a67; }
 .pin.reserved small { color: #d9b47c; }
+.pin.onboard { border-color: #3f6b86; background: linear-gradient(90deg, #16242e, var(--panel) 45%); }
+.legend .onboard .dot { background: #5aa9d6; }
+.pin.onboard small { color: #7fb8d8; }
 .chip { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--panel); text-align: center; }
 .chip > span:not(.chip-mark) { font-size: 9px; letter-spacing: .14em; color: var(--muted); }
 .chip strong { font-size: 17px; }
@@ -76,6 +79,7 @@ select { width: 100%; padding: 9px; color: var(--vscode-dropdown-foreground, #d7
 dl { display: grid; grid-template-columns: 1fr auto; gap: 10px; font-size: 12px; }
 dt { color: var(--muted); } dd { margin: 0; }
 .restriction { color: #e3b75a; font-size: 11px; line-height: 1.7; padding-left: 10px; border-left: 2px solid #8e743c; }
+.onboard-note { color: #7fb8d8; font-size: 11px; line-height: 1.7; padding-left: 10px; border-left: 2px solid #3f6b86; }
 .file-path { overflow-wrap: anywhere; font-family: monospace; color: var(--muted); font-size: 11px; }
 .secondary { border: 1px solid var(--border); background: transparent; color: inherit; padding: 7px 12px; border-radius: 3px; }
 .problems { border-top: 1px solid var(--border); padding: 20px 28px; }
@@ -96,6 +100,9 @@ dt { color: var(--muted); } dd { margin: 0; }
 .board-shortcuts li > span { display: flex; flex-direction: column; font-size: 11px; overflow-wrap: anywhere; }
 .board-shortcuts li small { color: var(--muted); font-size: 10px; margin-top: 2px; }
 .board-shortcuts .secondary { flex-shrink: 0; font-size: 10px; padding: 5px 9px; }
+.board-shortcuts .board-pin { font-size: 10px; margin-top: 1px; }
+.board-shortcuts .board-pin.reserved { color: #d9b47c; }
+.board-shortcuts .board-pin.onboard { color: #7fb8d8; }
 .pin small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 1120px) { .workspace { grid-template-columns: 240px minmax(400px, 1fr); } .inspector { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--border); } .header-meta { flex-wrap: wrap; gap: 8px; } }
 @media (max-width: 720px) { .workspace { display: block; } .resources { border-right: 0; border-bottom: 1px solid var(--border); } }

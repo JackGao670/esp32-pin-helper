@@ -7,6 +7,7 @@ import { devices, getDevice } from "./database/loader";
 import { addPeripheral, removePeripheral, setSignal, selectTarget } from "./core/model/peripherals";
 import { candidates, definition } from "./core/resolver/peripherals";
 import { PinDiagnostics } from "./vscode/diagnostics";
+import { PlannerHomeProvider } from "./vscode/homeView";
 import { detectTarget } from "./vscode/projectDetector";
 import { projectNotice } from "./core/model/project";
 import { readSettings, type PlannerSettings } from "./config/userSettings";
@@ -24,6 +25,18 @@ function readExtensionSettings(overrides: Partial<PlannerSettings> = {}): Planne
 
 export function activate(context: vscode.ExtensionContext): void {
   const diagnostics = new PinDiagnostics();
+  const home = new PlannerHomeProvider(readExtensionSettings);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider("espPinPlanner.home", home),
+    vscode.workspace.onDidChangeWorkspaceFolders(() => void home.refresh()),
+    vscode.workspace.onDidChangeConfiguration(event => {
+      if (event.affectsConfiguration("espPinPlanner")) void home.refresh();
+    }),
+    vscode.workspace.onDidChangeTextDocument(event => {
+      const path = event.document.uri.path;
+      if (path.endsWith("/.pinconfig.json") || path.endsWith("/sdkconfig")) void home.refresh();
+    })
+  );
   context.subscriptions.push(diagnostics,
     vscode.commands.registerCommand("espPinPlanner.selectTarget", async () => {
       try {
@@ -43,7 +56,7 @@ export function activate(context: vscode.ExtensionContext): void {
         if (open?.isDirty) throw new Error("Save or discard JSON editor changes before selecting the target chip.");
         const config = parseConfig(baseline);
         const hasAssignments = config.pins.length > 0 || Object.keys(config.peripherals ?? {}).length > 0;
-        const choices = devices.map(device => ({ label: device.id, description: device.id === config.target.chip ? `${device.name} (current)` : device.name, detail: hasAssignments ? "Assignments present. Will be rejected if they exist." : undefined, target: device.id }));
+        const choices = devices.map(device => ({ label: device.id, description: device.id === config.target.chip ? `${device.name} (current)` : device.name, detail: hasAssignments ? "Assignments are kept and re-checked against the new chip." : undefined, target: device.id }));
         const currentIndex = choices.findIndex(choice => choice.label === config.target.chip);
         if (currentIndex > 0) {
           const [current] = choices.splice(currentIndex, 1);
@@ -51,7 +64,7 @@ export function activate(context: vscode.ExtensionContext): void {
         }
         const picked = await vscode.window.showQuickPick(choices, {
           title: "Select Target Chip",
-          placeHolder: hasAssignments ? "Only empty configurations can be retargeted. Clear assignments first." : `Current target: ${config.target.chip}`
+          placeHolder: `Current target: ${config.target.chip}`
         });
         if (!picked || picked.target === config.target.chip) return;
         const updated = selectTarget(config, picked.target);
@@ -64,7 +77,9 @@ export function activate(context: vscode.ExtensionContext): void {
         const saved = await vscode.workspace.openTextDocument(uri);
         if (!await saved.save()) throw new Error("Target change could not be saved.");
         await diagnostics.refresh(uri, true);
-        void vscode.window.showInformationMessage(`Target changed to ${picked.target}.`);
+        void vscode.window.showInformationMessage(hasAssignments
+          ? `Target changed to ${picked.target}. Existing assignments were kept; review the new diagnostics.`
+          : `Target changed to ${picked.target}.`);
       } catch (error) {
         void vscode.window.showErrorMessage(`Select target chip failed: ${String(error)}`);
       }

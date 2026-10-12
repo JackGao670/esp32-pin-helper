@@ -8,9 +8,10 @@
     "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32c6/api-reference/peripherals/ledc.html",
     "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32c6/api-reference/peripherals/adc_oneshot.html",
     "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32c6/api-reference/peripherals/rmt.html",
-    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32c6/api-reference/peripherals/i2s.html"
+    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32c6/api-reference/peripherals/i2s.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32c6/api-reference/peripherals/usb_serial_jtag.html"
   ],
-  "scope": "Standard UART, HP I2C, standard SPI master, LEDC channels, ADC1, RMT channels and I2S master only; LP controllers excluded. RMT TX/RX direction is not enforced (C6 channels 0-1 are TX-only and 2-3 RX-only).",
+  "scope": "Standard UART, HP I2C, standard SPI master, LEDC channels, ADC1, RMT channels and I2S master only; LP controllers excluded. RMT TX/RX direction is not enforced (C6 channels 0-1 are TX-only and 2-3 RX-only). usb0 models the fixed USB Serial/JTAG pads (D- = GPIO12, D+ = GPIO13); the D+/D- pair must be routed together. The C6 has no LCD_CAM peripheral, so no RGB/8080 display is modeled.",
   "peripherals": [
     { "type": "uart", "instances": [0, 1], "signals": [
       { "id": "tx", "direction": "output", "routing": "gpio_matrix", "required": true },
@@ -43,6 +44,10 @@
       { "id": "dout", "direction": "output", "routing": "gpio_matrix", "required": false },
       { "id": "din", "direction": "input", "routing": "gpio_matrix", "required": false },
       { "id": "mclk", "direction": "output", "routing": "gpio_matrix", "required": false }
+    ] },
+    { "type": "usb", "instances": [0], "signals": [
+      { "id": "dn", "direction": "bidirectional", "routing": "dedicated", "gpio": [12], "required": true, "description": "USB D- (USB Serial/JTAG PHY negative data line), fixed to GPIO12." },
+      { "id": "dp", "direction": "bidirectional", "routing": "dedicated", "gpio": [13], "required": true, "description": "USB D+ (USB Serial/JTAG PHY positive data line), fixed to GPIO13." }
     ] }
   ]
 }

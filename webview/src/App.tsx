@@ -24,12 +24,19 @@ function App() {
     : allAssignments.some(p => p.gpio === gpio) ? "assigned" : "unused";
   const labelOf = (gpio: number): string => state.board?.labelMap[String(gpio)] ?? `GPIO${gpio}`;
   const reservedSet = new Set(state.board?.reservedGpios ?? []);
+  const onboardMap = new Map((state.board?.onboardPins ?? []).map(pin => [pin.gpio, pin.usage]));
   const pinButton = (gpio: number) => {
     const fn = allAssignments.find(p => p.gpio === gpio)?.function;
     const boardReserved = reservedSet.has(gpio);
-    return <button key={gpio} className={`pin ${status(gpio)} ${selected === gpio ? "selected" : ""} ${boardReserved ? "reserved" : ""}`}
-      aria-pressed={selected === gpio} onClick={() => select(gpio)} title={boardReserved ? `${labelOf(gpio)} — reserved on ${state.board?.name}` : labelOf(gpio)}>
-      <span className="dot" /><strong>{labelOf(gpio)}</strong><small>{fn?.replace("GPIO_", "") ?? (boardReserved ? "Reserved" : "Unassigned")}</small>
+    // Reserved takes precedence: it is a hard "do not reuse" pin, so it never doubles as an onboard badge.
+    const onboardUsage = boardReserved ? undefined : onboardMap.get(gpio);
+    return <button key={gpio} className={`pin ${status(gpio)} ${selected === gpio ? "selected" : ""} ${boardReserved ? "reserved" : ""} ${onboardUsage ? "onboard" : ""}`}
+      aria-pressed={selected === gpio} onClick={() => select(gpio)}
+      title={boardReserved ? `${labelOf(gpio)} — reserved on ${state.board?.name}`
+        : onboardUsage ? `${labelOf(gpio)} — wired to ${onboardUsage} on ${state.board?.name}`
+        : labelOf(gpio)}>
+      <span className="dot" /><strong>{labelOf(gpio)}</strong>
+      <small>{fn?.replace("GPIO_", "") ?? (boardReserved ? "Reserved" : onboardUsage ? "Onboard" : "Unassigned")}</small>
     </button>;
   };
   const targetSelector = <><label htmlFor="target-chip">Target Chip</label>
@@ -69,7 +76,8 @@ function App() {
         <div className="section-heading"><div><h2>GPIO Overview</h2><p>Logical layout, not a package pad map{state.board ? ` · Board: ${state.board.name}` : ""}</p></div><span>{device.pins.length} logical GPIOs</span></div>
         <div className="legend">{["unused", "assigned", "warning", "error", "selected"].map(s =>
           <span key={s} className={s}><i className="dot" />{s}</span>)}
-          {state.board?.reservedGpios?.length && <span className="reserved"><i className="dot" />reserved</span>}</div>
+          {state.board?.reservedGpios?.length && <span className="reserved"><i className="dot" />reserved</span>}
+          {onboardMap.size > 0 && <span className="onboard"><i className="dot" />onboard</span>}</div>
         <div className="pinout">
           <div className="pin-column">{device.pins.slice(0, Math.ceil(device.pins.length / 2)).map(p => pinButton(p.gpio))}</div>
           <div className="chip"><span className="chip-mark" /><span>ESPRESSIF</span><strong>{device.name}</strong><small>GPIO Matrix</small></div>
@@ -84,6 +92,8 @@ function App() {
         </p>
         {reservedSet.has(selected) && state.board &&
           <p className="restriction">Board reserved · {state.board.name}. Reassigning this pin may conflict with onboard hardware.</p>}
+        {!reservedSet.has(selected) && onboardMap.has(selected) && state.board &&
+          <p className="onboard-note">Board-wired · {state.board.name}. {onboardMap.get(selected)}. Reusing this pin disables that on-board device.</p>}
         {assignments.filter(item => item.owner).map(item =>
           <p key={`${item.owner}:${item.signal}`} className="muted">Used by {item.owner}: {item.signal?.toUpperCase()}</p>)}
         <label htmlFor="function">Function</label>

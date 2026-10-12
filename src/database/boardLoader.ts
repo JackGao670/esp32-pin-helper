@@ -172,6 +172,7 @@ export function boardInfoOf(board: BoardProfile): BoardInfo {
     name: board.name,
     labelMap,
     reservedGpios: [...board.reservedGpios],
-    defaultSignalMap
+    defaultSignalMap,
+    ...(board.onboardPins ? { onboardPins: board.onboardPins.map(pin => ({ ...pin })) } : {})
   };
 }

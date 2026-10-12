@@ -1,0 +1,18 @@
+# The extension and webview are pre-bundled into dist/ by `npm run build`
+# (esbuild bundles the device/board JSON data; vite bundles react/zustand).
+# Only dist/**, schemas/**, resources/** and package.json are needed at runtime.
+src/**
+test/**
+webview/**
+doc/**
+boards/**
+devices/**
+node_modules/**
+.vscode/**
+.gitignore
+.pinconfig.json
+package-lock.json
+tsconfig.json
+**/*.ts
+**/*.tsx
+**/*.map

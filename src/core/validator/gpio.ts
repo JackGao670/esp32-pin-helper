@@ -117,6 +117,15 @@ const peripheralRule: ValidationRule = { id: "peripherals", check(config, ctx) {
         problems.push({ ...location, severity: "warning", message: `${owner}: no ADC channels assigned.` });
       }
     }
+    if (peripheral.type === "usb") {
+      const hasDp = Boolean(peripheral.signals.dp);
+      const hasDn = Boolean(peripheral.signals.dn);
+      if (hasDp !== hasDn) {
+        const missing = hasDp ? "DN (D-)" : "DP (D+)";
+        problems.push({ ...location, severity: "warning",
+          message: `${owner}: USB ${missing} is not assigned — the D+ / D- pair must be routed together on the fixed USB pads.` });
+      }
+    }
     if (peripheral.type === "camera") {
       const syncSignals = ["xclk", "pclk", "vsync", "href"];
       const missingSync = syncSignals.filter(id => !peripheral.signals[id]);
@@ -155,6 +164,20 @@ const peripheralRule: ValidationRule = { id: "peripherals", check(config, ctx) {
       if (any24 && missing24.length) {
         problems.push({ ...location, severity: "warning",
           message: `${owner}: partial 24-bit mode; missing D16-D23 pins: ${missing24.join(", ")}.` });
+      }
+    }
+    if (peripheral.type === "lcd_mcu") {
+      const bits8 = Array.from({ length: 8 }, (_, i) => `d${i}`);
+      const missing8 = bits8.filter(id => !peripheral.signals[id]);
+      if (missing8.length) {
+        problems.push({ ...location, severity: "warning",
+          message: `${owner}: 8-bit 8080 (i80) data bus incomplete; missing: ${missing8.join(", ")}.` });
+      }
+      const any16 = Array.from({ length: 8 }, (_, i) => `d${8 + i}`).some(id => peripheral.signals[id]);
+      const missing16 = Array.from({ length: 8 }, (_, i) => `d${8 + i}`).filter(id => !peripheral.signals[id]);
+      if (any16 && missing16.length) {
+        problems.push({ ...location, severity: "warning",
+          message: `${owner}: partial 16-bit 8080 (i80) bus; missing D8-D15 pins: ${missing16.join(", ")}.` });
       }
     }
     if (peripheral.type === "camera_mipi") {

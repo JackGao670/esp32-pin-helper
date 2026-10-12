@@ -36,10 +36,12 @@ test("pinconfig.schema.json v1 covers target chips, gpio functions and P1 periph
   assert.deepEqual(schema.properties.target.properties.chip.enum, ["esp32s3", "esp32c6", "esp32p4"]);
   assert.deepEqual(schema.properties.pins.items.properties.function.enum, ["GPIO_INPUT", "GPIO_OUTPUT", "GPIO_OPEN_DRAIN"]);
   const peripheral = schema.definitions.peripheral;
-  assert.deepEqual(peripheral.properties.type.enum, ["uart", "i2c", "spi", "ledc", "adc", "rmt", "i2s", "camera", "lcd", "camera_mipi", "lcd_mipi"]);
+  assert.deepEqual(peripheral.properties.type.enum, ["uart", "i2c", "spi", "ledc", "adc", "rmt", "i2s", "camera", "lcd", "lcd_mcu", "camera_mipi", "lcd_mipi", "usb"]);
   assert.equal("signals-uart" in schema.definitions, true);
   assert.equal("signals-adc" in schema.definitions, true);
   assert.equal("signals-i2s" in schema.definitions, true);
+  assert.equal("signals-lcd-mcu" in schema.definitions, true);
+  assert.equal("signals-usb" in schema.definitions, true);
   assert.ok(schema.definitions["signals-adc"].description.includes("ADC1"));
   // Schema's gpioRef regex should reject malformed values.
   const gpioPattern = new RegExp(schema.definitions.gpioRef.pattern);
@@ -117,6 +119,23 @@ test("schema root allOf constrains per-chip owner names and per-type instance en
   assert.equal(owners("esp32c6").has("lcd0"), false);
   assert.equal(owners("esp32c6").has("camera_mipi0"), false);
   assert.equal(owners("esp32c6").has("lcd_mipi0"), false);
+  // USB is present on every chip; lcd_mcu only where LCD_CAM exists (S3 / P4, not C6).
+  assert.equal(owners("esp32s3").has("usb0"), true);
+  assert.equal(owners("esp32c6").has("usb0"), true);
+  assert.equal(owners("esp32p4").has("usb0"), true);
+  assert.equal(owners("esp32s3").has("lcd_mcu0"), true);
+  assert.equal(owners("esp32p4").has("lcd_mcu0"), true);
+  assert.equal(owners("esp32c6").has("lcd_mcu0"), false);
+  assert.deepEqual(instEnumForType("esp32s3", "usb"),     [0]);
+  assert.deepEqual(instEnumForType("esp32c6", "usb"),     [0]);
+  assert.deepEqual(instEnumForType("esp32p4", "usb"),     [0]);
+  assert.deepEqual(instEnumForType("esp32s3", "lcd_mcu"), [0]);
+  assert.deepEqual(instEnumForType("esp32p4", "lcd_mcu"), [0]);
+  // USB / LCD_MCU signal schemas defined, additionalProperties=false
+  assert.equal(schema.definitions["signals-usb"].additionalProperties, false);
+  assert.equal(schema.definitions["signals-lcd-mcu"].additionalProperties, false);
+  assert.deepEqual(Object.keys(schema.definitions["signals-usb"].properties).sort(), ["dn","dp"].sort());
+  assert.equal(Object.keys(schema.definitions["signals-lcd-mcu"].properties).includes("d15"), true);
   // MIPI signal schemas defined, additionalProperties=false
   assert.equal("signals-camera-mipi" in schema.definitions, true);
   assert.equal("signals-lcd-mipi" in schema.definitions, true);

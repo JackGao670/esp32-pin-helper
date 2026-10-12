@@ -12,6 +12,8 @@
     "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/i2s.html",
     "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/lcd.html#rgb-interfaces",
     "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/lcd.html#mipi-dsi-interfaces",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/lcd/i80_lcd.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/usb_serial_jtag.html",
     "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/cam_ctlr_cam_dvp.html",
     "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/cam_ctlr_cam_ctlr_mipi.html",
     "https://www.espressif.com/sites/default/files/documentation/esp32-p4_datasheet_en.pdf (Ch. 2.1.3 High-Speed I/O Matrix + MIPI I/O Domain)"
@@ -49,6 +51,10 @@
       { "id": "dout", "direction": "output", "routing": "gpio_matrix", "required": false },
       { "id": "din", "direction": "input", "routing": "gpio_matrix", "required": false },
       { "id": "mclk", "direction": "output", "routing": "gpio_matrix", "required": false }
+    ] },
+    { "type": "usb", "instances": [0], "signals": [
+      { "id": "dn", "direction": "bidirectional", "routing": "dedicated", "gpio": [24], "required": true, "description": "USB D- on the USB1P1 pads shared with the USB Serial/JTAG controller (datasheet USB1P1_N0 = GPIO24). The full-speed USB 2.0 OTG alternate pair is GPIO26/GPIO27 and its D-/D+ roles may be swapped in hardware." },
+      { "id": "dp", "direction": "bidirectional", "routing": "dedicated", "gpio": [25], "required": true, "description": "USB D+ on the USB1P1 pads shared with the USB Serial/JTAG controller (datasheet USB1P1_P0 = GPIO25)." }
     ] },
     { "type": "camera", "instances": [0], "signals": [
       { "id": "xclk", "direction": "output", "routing": "gpio_matrix", "required": true, "description": "DVP camera master clock output (CAM_XCLK)" },
@@ -106,6 +112,28 @@
       { "id": "d21", "direction": "output", "routing": "gpio_matrix", "required": false },
       { "id": "d22", "direction": "output", "routing": "gpio_matrix", "required": false },
       { "id": "d23", "direction": "output", "routing": "gpio_matrix", "required": false }
+    ] },
+    { "type": "lcd_mcu", "instances": [0], "signals": [
+      { "id": "dc",  "direction": "output", "routing": "gpio_matrix", "required": true,  "description": "Data/command select (a.k.a. RS) for the 8080 (i80) bus." },
+      { "id": "wr",  "direction": "output", "routing": "gpio_matrix", "required": true,  "description": "Write strobe; the panel latches data on the active edge." },
+      { "id": "rd",  "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Read strobe (optional; write-only panels leave it unconnected)." },
+      { "id": "cs",  "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Chip select (optional; often tied active on single-panel boards)." },
+      { "id": "d0",  "direction": "output", "routing": "gpio_matrix", "required": true,  "description": "8080 parallel data bit 0 (8-bit baseline bus)." },
+      { "id": "d1",  "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "d2",  "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "d3",  "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "d4",  "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "d5",  "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "d6",  "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "d7",  "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "d8",  "direction": "output", "routing": "gpio_matrix", "required": false, "description": "8080 parallel data bit 8 (start of 16-bit bus extension)." },
+      { "id": "d9",  "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d10", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d11", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d12", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d13", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d14", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "d15", "direction": "output", "routing": "gpio_matrix", "required": false }
     ] },
     { "type": "lcd_mipi", "instances": [0], "signals": [
       { "id": "dsi_clkp", "direction": "output", "routing": "dedicated", "required": true, "description": "MIPI DSI differential clock lane positive (MIPI DPHY dedicated pad)" },

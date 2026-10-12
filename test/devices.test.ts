@@ -46,7 +46,14 @@ test("C6 peripheral assignments validate and switching preserves non-chip metada
   config = setSignal(config, "uart1", "rx", 23);
   assert.deepEqual(validateGpio(config), []);
   assert.throws(() => addPeripheral(config, "uart", 2), /Unsupported/);
-  assert.throws(() => selectTarget(config, "esp32s3"), /empty/);
+  // Switching chips keeps the UART assignments and re-validates them for the new chip.
+  const retargeted = selectTarget(config, "esp32s3");
+  assert.equal(retargeted.target.chip, "esp32s3");
+  assert.deepEqual(retargeted.peripherals, config.peripherals);
+  assert.deepEqual(retargeted.pins, config.pins);
+  // A peripheral the new chip lacks is reported as a diagnostic, not a blocking error.
+  const camera = addPeripheral(createConfig("esp32s3"), "camera", 0);
+  assert.ok(validateGpio(selectTarget(camera, "esp32c6")).some(p => /Unsupported peripheral camera:0/.test(p.message)));
   const empty = createConfig();
   empty.target.package = "QFN56";
   empty.vendor = { name: "keep" };

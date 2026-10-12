@@ -2,16 +2,9 @@ import { useMemo, useState } from "react";
 import { usePlanner } from "./store";
 import { getPeripherals, candidates, definition } from "../../src/core/resolver/peripherals";
 import { resolveAssignments } from "../../src/core/model/peripherals";
+import { boardShortcutsFor, type BoardShortcut } from "./boardDefaults";
 import { CAMERA_PRESETS, LCD_PRESETS, presetOwnerInstance } from "./presets";
 import type { PeripheralSignalPreset } from "./presets";
-
-/** Board default-signal-map owner keys use the `<type><instance>` convention (e.g. "spi2", "lcd_mipi0").
- *  The type may itself contain digits, so allow them after the leading letter ("i2c0", "i2s0"). */
-function parseOwner(owner: string): { type: string; instance: number } | undefined {
-  const match = owner.match(/^([a-z][a-z0-9_]*?)(\d+)$/);
-  if (!match) return undefined;
-  return { type: match[1], instance: Number(match[2]) };
-}
 
 export function PeripheralPanel() {
   const { state, send, pending, select } = usePlanner();
@@ -62,25 +55,10 @@ export function PeripheralPanel() {
     }
   }
 
-  // Board default signal map: only expose owners whose every required signal is present,
-  // so a one-click apply never leaves a half-configured peripheral behind.
-  const boardShortcuts = useMemo(() => {
-    const map = state.board?.defaultSignalMap;
-    if (!map) return [] as { owner: string; type: string; instance: number; signals: Record<string, string> }[];
-    const out: { owner: string; type: string; instance: number; signals: Record<string, string> }[] = [];
-    for (const [owner, signals] of Object.entries(map)) {
-      const parsed = parseOwner(owner);
-      if (!parsed) continue;
-      const def = definition(parsed.type, parsed.instance, chip);
-      if (!def) continue;
-      const required = def.signals.filter(s => s.required).map(s => s.id);
-      if (!required.every(id => signals[id] !== undefined)) continue;
-      out.push({ owner, type: parsed.type, instance: parsed.instance, signals });
-    }
-    return out;
-  }, [state.board, chip]);
+  // Board default signal map: owners whose every required signal is present (see boardShortcutsFor).
+  const boardShortcuts = useMemo(() => boardShortcutsFor(state.board, chip), [state.board, chip]);
 
-  function applyBoardShortcut(shortcut: { owner: string; type: string; instance: number; signals: Record<string, string> }) {
+  function applyBoardShortcut(shortcut: BoardShortcut) {
     if (disabled) return;
     const revision = state.revision;
     const exists = state.config.peripherals?.[shortcut.owner]?.type === shortcut.type
@@ -137,7 +115,13 @@ export function PeripheralPanel() {
           {boardShortcuts.map(shortcut => (
             <li key={shortcut.owner}>
               <span>{shortcut.type.toUpperCase()}{shortcut.instance}
-                <small>{Object.entries(shortcut.signals).map(([s, g]) => `${s}=${g}`).join(", ")}</small></span>
+                <small>{Object.entries(shortcut.signals).map(([s, g]) => `${s}=${g}`).join(", ")}</small>
+                {shortcut.boardPins.map(pin => (
+                  <small key={pin.gpio} className={`board-pin ${pin.kind}`}>
+                    {`GPIO${pin.gpio} · ${pin.kind === "reserved" ? "board-reserved" : "on-board"}: ${pin.note}`}
+                  </small>
+                ))}
+              </span>
               <button className="secondary" disabled={disabled} onClick={() => applyBoardShortcut(shortcut)}>
                 Apply
               </button>
