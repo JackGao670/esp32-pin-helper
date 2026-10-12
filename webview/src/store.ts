@@ -1,0 +1,81 @@
+import { create } from "zustand";
+import { createConfig, setPin } from "../../src/core/model/config";
+import type { ClientMessage, HostMessage, PlannerState } from "../../src/core/model/messages";
+import { validateGpio } from "../../src/core/validator/gpio";
+import { addPeripheral, removePeripheral, setSignal, selectTarget } from "../../src/core/model/peripherals";
+import { getDevice } from "../../src/database/loader";
+import { resolveBoardFromSettings, boardInfoOf } from "../../src/database/boardLoader";
+import { DEFAULT_SETTINGS } from "../../src/config/userSettings";
+
+declare const acquireVsCodeApi: undefined | (() => { postMessage(message: ClientMessage): void });
+const vscode = typeof acquireVsCodeApi === "function" ? acquireVsCodeApi() : undefined;
+
+interface Store {
+  state: PlannerState;
+  selected: number;
+  pending: boolean;
+  select: (gpio: number) => void;
+  send: (message: ClientMessage) => void;
+}
+
+function makeInitialState(): PlannerState {
+  const config = createConfig();
+  const chip = config.target.chip as "esp32s3" | "esp32c6" | "esp32p4";
+  const board = resolveBoardFromSettings(DEFAULT_SETTINGS.board,
+    chip === "esp32s3" || chip === "esp32c6" || chip === "esp32p4" ? chip : "esp32s3");
+  const state: PlannerState = {
+    config,
+    revision: 0,
+    file: vscode ? "Loading..." : "Browser preview (not saved to disk)",
+    writable: !vscode,
+    problems: vscode ? [] : validateGpio(config),
+    notice: vscode ? "" : "Preview mode: edits are in memory only.",
+    board: board ? boardInfoOf(board) : undefined
+  };
+  return state;
+}
+
+export const usePlanner = create<Store>((set, get) => ({
+  state: makeInitialState(),
+  selected: 0,
+  pending: Boolean(vscode),
+  select: selected => set({ selected }),
+  send: message => {
+    if (vscode) {
+      if (!["ready", "openJson"].includes(message.type)) set({ pending: true });
+      vscode.postMessage(message);
+    } else if (message.type !== "ready" && message.type !== "openJson") {
+      try {
+        const state = get().state;
+        const config = message.type === "setPin" ? setPin(state.config, message.gpio, message.function)
+          : message.type === "addPeripheral" ? addPeripheral(state.config, message.peripheral, message.instance)
+          : message.type === "removePeripheral" ? removePeripheral(state.config, message.owner)
+          : message.type === "selectTarget" ? selectTarget(state.config, message.chip)
+          : setSignal(state.config, message.owner, message.signal, message.gpio);
+        const chip = config.target.chip as "esp32s3" | "esp32c6" | "esp32p4";
+        const board = resolveBoardFromSettings(DEFAULT_SETTINGS.board,
+          chip === "esp32s3" || chip === "esp32c6" || chip === "esp32p4" ? chip : "esp32s3");
+        set({
+          selected: getDevice(config.target.chip)?.pins.some(pin => pin.gpio === get().selected) ? get().selected : 0,
+          state: {
+            ...state,
+            config,
+            revision: state.revision + 1,
+            problems: validateGpio(config),
+            board: board ? boardInfoOf(board) : undefined
+          }
+        });
+      } catch (error) {
+        set({ state: { ...get().state, notice: String(error) } });
+      }
+    }
+  }
+}));
+
+window.addEventListener("message", event => {
+  const message = event.data as HostMessage;
+  if (message?.type === "state") usePlanner.setState({ state: message.state, pending: false,
+    selected: getDevice(message.state.config.target.chip)?.pins.some(pin => pin.gpio === usePlanner.getState().selected) ? usePlanner.getState().selected : 0 });
+  if (message?.type === "focus") usePlanner.setState({ selected: message.gpio });
+});
+usePlanner.getState().send({ type: "ready" });
