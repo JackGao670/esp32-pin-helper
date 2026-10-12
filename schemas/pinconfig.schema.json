@@ -1,0 +1,460 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ESP Pin Configuration v1",
+  "description": "Hardware pin and peripheral configuration used by the ESP Pin Planner VS Code extension. The file is consumed by diagnostics, the visual pinout editor and board-aware validators; it is NOT compiled into C/C++ code by the extension itself.",
+  "type": "object",
+  "required": ["version", "target", "pins"],
+  "additionalProperties": true,
+  "allOf": [
+    {
+      "if": { "properties": { "target": { "properties": { "chip": { "const": "esp32s3" } }, "required": ["chip"] } } },
+      "then": {
+        "properties": {
+          "peripherals": {
+            "propertyNames": {
+              "enum": [
+                "uart0","uart1","uart2",
+                "i2c0","i2c1",
+                "spi2","spi3",
+                "ledc0","ledc1","ledc2","ledc3","ledc4","ledc5","ledc6","ledc7",
+                "adc1","adc2",
+                "rmt0","rmt1","rmt2","rmt3","rmt4","rmt5","rmt6","rmt7",
+                "i2s0","i2s1",
+                "camera0","lcd0"
+              ],
+              "description": "ESP32-S3 (IDF v5.3): UART 0-2, I2C 0-1, SPI 2-3, LEDC 0-7, ADC 1+2, RMT 0-7, I2S 0-1, CAMERA 0 (DVP 8-bit), LCD 0 (RGB up to 24-bit)."
+            },
+            "additionalProperties": {
+              "allOf": [
+                { "if": { "properties": { "type": { "const": "uart"    }}}, "then": { "properties": { "instance": { "enum": [0,1,2]         }}}},
+                { "if": { "properties": { "type": { "const": "i2c"     }}}, "then": { "properties": { "instance": { "enum": [0,1]           }}}},
+                { "if": { "properties": { "type": { "const": "spi"     }}}, "then": { "properties": { "instance": { "enum": [2,3]           }}}},
+                { "if": { "properties": { "type": { "const": "ledc"    }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3,4,5,6,7] }}}},
+                { "if": { "properties": { "type": { "const": "adc"     }}}, "then": { "properties": { "instance": { "enum": [1,2]           }}}},
+                { "if": { "properties": { "type": { "const": "rmt"     }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3,4,5,6,7] }}}},
+                { "if": { "properties": { "type": { "const": "i2s"     }}}, "then": { "properties": { "instance": { "enum": [0,1]           }}}},
+                { "if": { "properties": { "type": { "const": "camera"  }}}, "then": { "properties": { "instance": { "enum": [0]               }}}},
+                { "if": { "properties": { "type": { "const": "lcd"     }}}, "then": { "properties": { "instance": { "enum": [0]               }}}}
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "target": { "properties": { "chip": { "const": "esp32c6" } }, "required": ["chip"] } } },
+      "then": {
+        "properties": {
+          "peripherals": {
+            "propertyNames": {
+              "enum": [
+                "uart0","uart1",
+                "i2c0",
+                "spi2",
+                "ledc0","ledc1","ledc2","ledc3","ledc4","ledc5",
+                "adc1",
+                "rmt0","rmt1","rmt2","rmt3",
+                "i2s0"
+              ],
+              "description": "ESP32-C6 (IDF v5.3): UART 0-1, I2C 0 only, SPI 2 only, LEDC 0-5, ADC 1 only, RMT 0-3, I2S 0 only."
+            },
+            "additionalProperties": {
+              "allOf": [
+                { "if": { "properties": { "type": { "const": "uart" }}}, "then": { "properties": { "instance": { "enum": [0,1] }}}},
+                { "if": { "properties": { "type": { "const": "i2c"  }}}, "then": { "properties": { "instance": { "enum": [0]     }}}},
+                { "if": { "properties": { "type": { "const": "spi"  }}}, "then": { "properties": { "instance": { "enum": [2]     }}}},
+                { "if": { "properties": { "type": { "const": "ledc" }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3,4,5] }}}},
+                { "if": { "properties": { "type": { "const": "adc"  }}}, "then": { "properties": { "instance": { "enum": [1]     }}}},
+                { "if": { "properties": { "type": { "const": "rmt"  }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3] }}}},
+                { "if": { "properties": { "type": { "const": "i2s"  }}}, "then": { "properties": { "instance": { "enum": [0]     }}}}
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "target": { "properties": { "chip": { "const": "esp32p4" } }, "required": ["chip"] } } },
+      "then": {
+        "properties": {
+          "peripherals": {
+            "propertyNames": {
+              "enum": [
+                "uart0","uart1","uart2","uart3","uart4",
+                "i2c0","i2c1",
+                "spi2",
+                "ledc0","ledc1","ledc2","ledc3","ledc4","ledc5","ledc6","ledc7",
+                "adc1",
+                "rmt0","rmt1","rmt2","rmt3","rmt4","rmt5","rmt6","rmt7",
+                "i2s0","i2s1","i2s2",
+                "camera0","camera_mipi0","lcd0","lcd_mipi0"
+              ],
+              "description": "ESP32-P4 (IDF v5.4): UART 0-4, I2C 0-1, SPI 2 only, LEDC 0-7, ADC 1 only, RMT 0-7, I2S 0-2, DVP Camera 0, MIPI CSI-2 Camera 0 (2 lane), RGB LCD 0 (up to 24-bit), MIPI DSI LCD 0 (up to 4 lane)."
+            },
+            "additionalProperties": {
+              "allOf": [
+                { "if": { "properties": { "type": { "const": "uart" }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3,4] }}}},
+                { "if": { "properties": { "type": { "const": "i2c"  }}}, "then": { "properties": { "instance": { "enum": [0,1]         }}}},
+                { "if": { "properties": { "type": { "const": "spi"  }}}, "then": { "properties": { "instance": { "enum": [2]             }}}},
+                { "if": { "properties": { "type": { "const": "ledc" }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3,4,5,6,7] }}}},
+                { "if": { "properties": { "type": { "const": "adc"  }}}, "then": { "properties": { "instance": { "enum": [1]             }}}},
+                { "if": { "properties": { "type": { "const": "rmt"  }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3,4,5,6,7] }}}},
+                { "if": { "properties": { "type": { "const": "i2s"  }}}, "then": { "properties": { "instance": { "enum": [0,1,2]         }}}},
+                { "if": { "properties": { "type": { "const": "camera"       }}}, "then": { "properties": { "instance": { "enum": [0] }}}},
+                { "if": { "properties": { "type": { "const": "camera_mipi"  }}}, "then": { "properties": { "instance": { "enum": [0] }}}},
+                { "if": { "properties": { "type": { "const": "lcd"          }}}, "then": { "properties": { "instance": { "enum": [0] }}}},
+                { "if": { "properties": { "type": { "const": "lcd_mipi"     }}}, "then": { "properties": { "instance": { "enum": [0] }}}}
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "version": {
+      "const": 1,
+      "title": "Document version",
+      "description": "Schema version. Only v1 is supported."
+    },
+    "target": {
+      "type": "object",
+      "title": "Target chip / package",
+      "required": ["chip"],
+      "additionalProperties": true,
+      "properties": {
+        "chip": {
+          "type": "string",
+          "enum": ["esp32s3", "esp32c6", "esp32p4"],
+          "description": "Target chip identifier used to route hardware rules.",
+          "x-doc-enum": [
+            "ESP32-S3 (v5.3 GPIO + UART/I2C/SPI/LEDC/ADC/RMT/I2S)",
+            "ESP32-C6 (v5.3 single ADC1, RMT 4 ch, I2S 0 only)",
+            "ESP32-P4 (v5.4 ADC1 GPIO16-23/49-54 only, RMT 8 ch, I2S 0-2)"
+          ]
+        },
+        "package": {
+          "type": "string",
+          "examples": ["QFN56", "WROOM-1", "WROOM-S3-N16R8"],
+          "description": "Optional human-readable package / SiP variant. Not checked against hardware rules yet."
+        },
+        "variant": {
+          "type": "string",
+          "description": "Optional free-form variant tag (e.g. 'custom', 'wroom-1-n8')."
+        }
+      }
+    },
+    "vendor": {
+      "type": "object",
+      "title": "Vendor / user metadata",
+      "description": "Preserved through round-trip edits; never written by the planner automatically.",
+      "additionalProperties": true
+    },
+    "pins": {
+      "type": "array",
+      "title": "Manual GPIO assignments",
+      "description": "Per-GPIO overrides / direct pin functions. Peripheral routes are stored in `peripherals.*.signals` and do not need to be duplicated here.",
+      "items": {
+        "type": "object",
+        "required": ["gpio", "function"],
+        "additionalProperties": true,
+        "properties": {
+          "gpio": { "type": "integer", "minimum": 0, "title": "GPIO number" },
+          "function": {
+            "type": "string",
+            "title": "GPIO function",
+            "enum": ["GPIO_INPUT", "GPIO_OUTPUT", "GPIO_OPEN_DRAIN"],
+            "description": "Supported built-in functions. Unknown values are preserved by the editor but skipped for capability validation."
+          },
+          "label": { "type": "string", "description": "User label shown in Pin Inspector." },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "peripherals": {
+      "type": "object",
+      "title": "Peripheral assignments",
+      "description": "`owner` key must match the pattern `{type}{instance}` (e.g. uart1, spi2, adc1). Route values are 'GPIO<number>'. Owner names are further constrained per target chip via the chip-level allOf rules at the schema root.",
+      "additionalProperties": {
+        "$ref": "#/definitions/peripheral"
+      }
+    }
+  },
+  "definitions": {
+    "gpioRef": {
+      "type": "string",
+      "pattern": "^GPIO(0|[1-9][0-9]*)$",
+      "title": "GPIO reference",
+      "examples": ["GPIO17", "GPIO48"]
+    },
+    "peripheral": {
+      "type": "object",
+      "required": ["type", "instance", "signals"],
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["uart", "i2c", "spi", "ledc", "adc", "rmt", "i2s", "camera", "lcd", "camera_mipi", "lcd_mipi"],
+          "description": "Peripheral type. Unknown types produce an Unsupported diagnostic. camera/lcd = parallel DVP / RGB via GPIOMatrix; camera_mipi / lcd_mipi = MIPI CSI-2 / DSI with dedicated differential pads (ESP32-P4 only)."
+        },
+        "instance": { "type": "integer", "minimum": 0, "title": "Peripheral instance",
+          "description": "Instance numbers are chip-specific: e.g. UART max is 2 on S3, 1 on C6, 4 on P4."
+        },
+        "label": { "type": "string" },
+        "softwareCs": { "type": "boolean", "description": "SPI only: set true to suppress the 'CS unassigned' warning when CS is bit-banged." },
+        "vendor": { "type": "object", "additionalProperties": true },
+        "signals": { "$ref": "#/definitions/signals" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "uart" } } },
+          "then": {
+            "properties": {
+              "signals": { "$ref": "#/definitions/signals-uart" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "i2c" } } },
+          "then": {
+            "properties": {
+              "signals": { "$ref": "#/definitions/signals-i2c" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "spi" } } },
+          "then": {
+            "properties": {
+              "signals": { "$ref": "#/definitions/signals-spi" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "ledc" } } },
+          "then": {
+            "properties": {
+              "signals": { "$ref": "#/definitions/signals-ledc" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "adc" } } },
+          "then": {
+            "properties": {
+              "signals": { "$ref": "#/definitions/signals-adc" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "rmt" } } },
+          "then": {
+            "properties": {
+              "signals": { "$ref": "#/definitions/signals-rmt" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "i2s" } } },
+          "then": {
+            "properties": {
+              "signals": { "$ref": "#/definitions/signals-i2s" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "camera" } } },
+          "then": {
+            "properties": {
+              "signals": { "$ref": "#/definitions/signals-camera" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "lcd" } } },
+          "then": {
+            "properties": {
+              "signals": { "$ref": "#/definitions/signals-lcd" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "camera_mipi" } } },
+          "then": {
+            "properties": {
+              "signals": { "$ref": "#/definitions/signals-camera-mipi" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "lcd_mipi" } } },
+          "then": {
+            "properties": {
+              "signals": { "$ref": "#/definitions/signals-lcd-mipi" }
+            }
+          }
+        }
+      ]
+    },
+    "signals": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/gpioRef" },
+      "description": "Catch-all route map; specific signal names are constrained by the type-specific if/then schemas above."
+    },
+    "signals-uart": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tx":  { "$ref": "#/definitions/gpioRef", "description": "UART TX (output, required for the baseline profile)." },
+        "rx":  { "$ref": "#/definitions/gpioRef", "description": "UART RX (input, required)." },
+        "rts": { "$ref": "#/definitions/gpioRef", "description": "UART RTS (output, optional)." },
+        "cts": { "$ref": "#/definitions/gpioRef", "description": "UART CTS (input, optional)." }
+      }
+    },
+    "signals-i2c": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sda": { "$ref": "#/definitions/gpioRef", "description": "I2C SDA (bidirectional open-drain, required)." },
+        "scl": { "$ref": "#/definitions/gpioRef", "description": "I2C SCL (bidirectional open-drain, required)." }
+      }
+    },
+    "signals-spi": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mosi": { "$ref": "#/definitions/gpioRef", "description": "SPI MOSI / IO0 (output)." },
+        "miso": { "$ref": "#/definitions/gpioRef", "description": "SPI MISO / IO1 (input)." },
+        "sclk": { "$ref": "#/definitions/gpioRef", "description": "SPI SCLK (output, required)." },
+        "cs":   { "$ref": "#/definitions/gpioRef", "description": "SPI CS (output, required unless softwareCs=true)." },
+        "d":    { "$ref": "#/definitions/gpioRef", "description": "SPI IO3 / D (quad/octal data line)." },
+        "q":    { "$ref": "#/definitions/gpioRef", "description": "SPI IO1 / Q (quad/octal data line)." },
+        "wp":   { "$ref": "#/definitions/gpioRef", "description": "SPI IO2 / WP (write protect)." },
+        "hd":   { "$ref": "#/definitions/gpioRef", "description": "SPI IO3 / HD (hold, sometimes renamed to d or q by boards)." }
+      }
+    },
+    "signals-ledc": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "out": { "$ref": "#/definitions/gpioRef", "description": "LEDC PWM output (output, required)." }
+      }
+    },
+    "signals-adc": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "in": { "$ref": "#/definitions/gpioRef", "description": "ADC analog input (required; filtered to the documented unit channels). Use multiple owners (adc1 + adc2 for chips that have two units) instead of duplicating `in`." }
+      },
+      "description": "ADC routes are filtered per chip unit: e.g. ESP32-S3 ADC1 accepts GPIO1-GPIO10, ADC2 GPIO11-GPIO20; ESP32-C6 has only ADC1 (GPIO0-GPIO6); ESP32-P4 has only ADC1 (GPIO16-GPIO23 plus GPIO49-GPIO54)."
+    },
+    "signals-rmt": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sig": { "$ref": "#/definitions/gpioRef", "description": "RMT data signal (bidirectional in the PoC schema). ESP-IDF builds enforce TX-only vs RX-only channel banks on S3/C6." }
+      }
+    },
+    "signals-i2s": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bclk": { "$ref": "#/definitions/gpioRef", "description": "I2S bit clock (output, required; master mode)." },
+        "ws":   { "$ref": "#/definitions/gpioRef", "description": "I2S word select / LRCLK (output, required)." },
+        "dout": { "$ref": "#/definitions/gpioRef", "description": "I2S serial data output (optional, but at least dout or din is recommended)." },
+        "din":  { "$ref": "#/definitions/gpioRef", "description": "I2S serial data input (optional)." },
+        "mclk": { "$ref": "#/definitions/gpioRef", "description": "I2S master clock (output, optional)." }
+      }
+    },
+    "signals-camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "xclk":  { "$ref": "#/definitions/gpioRef", "description": "Sensor master clock output (required, e.g. 24 MHz for OV2640 / OV5640)." },
+        "pclk":  { "$ref": "#/definitions/gpioRef", "description": "Sensor pixel clock input (required)." },
+        "vsync": { "$ref": "#/definitions/gpioRef", "description": "Vertical sync input (required)." },
+        "href":  { "$ref": "#/definitions/gpioRef", "description": "Horizontal reference / valid-data window input (required)." },
+        "d0":    { "$ref": "#/definitions/gpioRef", "description": "Parallel data bit 0 — 8-bit DVP (required)." },
+        "d1":    { "$ref": "#/definitions/gpioRef", "description": "Parallel data bit 1 (required for 8-bit DVP)." },
+        "d2":    { "$ref": "#/definitions/gpioRef", "description": "Parallel data bit 2 (required)." },
+        "d3":    { "$ref": "#/definitions/gpioRef", "description": "Parallel data bit 3 (required)." },
+        "d4":    { "$ref": "#/definitions/gpioRef", "description": "Parallel data bit 4 (required)." },
+        "d5":    { "$ref": "#/definitions/gpioRef", "description": "Parallel data bit 5 (required)." },
+        "d6":    { "$ref": "#/definitions/gpioRef", "description": "Parallel data bit 6 (required)." },
+        "d7":    { "$ref": "#/definitions/gpioRef", "description": "Parallel data bit 7 (required)." },
+        "pwdn":  { "$ref": "#/definitions/gpioRef", "description": "Sensor PWDN / power-down control (output; OV2640/OV5640 active-high)." },
+        "reset": { "$ref": "#/definitions/gpioRef", "description": "Sensor RESETb / hardware reset (output; OV2640/OV5640 active-low)." }
+      }
+    },
+    "signals-lcd": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pclk":  { "$ref": "#/definitions/gpioRef", "description": "LCD pixel clock output (required). Panel-specified pixel rate is not validated yet." },
+        "vsync": { "$ref": "#/definitions/gpioRef", "description": "Vertical sync output (required)." },
+        "hsync": { "$ref": "#/definitions/gpioRef", "description": "Horizontal sync output (required)." },
+        "de":    { "$ref": "#/definitions/gpioRef", "description": "Data-enable output (required; high during active pixels)." },
+        "d0":    { "$ref": "#/definitions/gpioRef", "description": "Data bit 0 (required for 8/16/24-bit RGB)." },
+        "d1":    { "$ref": "#/definitions/gpioRef", "description": "Data bit 1 (required)." },
+        "d2":    { "$ref": "#/definitions/gpioRef", "description": "Data bit 2 (required)." },
+        "d3":    { "$ref": "#/definitions/gpioRef", "description": "Data bit 3 (required)." },
+        "d4":    { "$ref": "#/definitions/gpioRef", "description": "Data bit 4 (required)." },
+        "d5":    { "$ref": "#/definitions/gpioRef", "description": "Data bit 5 (required)." },
+        "d6":    { "$ref": "#/definitions/gpioRef", "description": "Data bit 6 (required)." },
+        "d7":    { "$ref": "#/definitions/gpioRef", "description": "Data bit 7 (required)." },
+        "d8":    { "$ref": "#/definitions/gpioRef", "description": "Data bit 8 (optional — 16/24-bit RGB mode)." },
+        "d9":    { "$ref": "#/definitions/gpioRef" },
+        "d10":   { "$ref": "#/definitions/gpioRef" },
+        "d11":   { "$ref": "#/definitions/gpioRef" },
+        "d12":   { "$ref": "#/definitions/gpioRef" },
+        "d13":   { "$ref": "#/definitions/gpioRef" },
+        "d14":   { "$ref": "#/definitions/gpioRef" },
+        "d15":   { "$ref": "#/definitions/gpioRef", "description": "Data bit 15 (optional — 16-bit RGB565/RGB mode)." },
+        "d16":   { "$ref": "#/definitions/gpioRef", "description": "Data bit 16 (optional — 24-bit RGB888 mode)." },
+        "d17":   { "$ref": "#/definitions/gpioRef" },
+        "d18":   { "$ref": "#/definitions/gpioRef" },
+        "d19":   { "$ref": "#/definitions/gpioRef" },
+        "d20":   { "$ref": "#/definitions/gpioRef" },
+        "d21":   { "$ref": "#/definitions/gpioRef" },
+        "d22":   { "$ref": "#/definitions/gpioRef" },
+        "d23":   { "$ref": "#/definitions/gpioRef", "description": "Data bit 23 (optional — 24-bit RGB888 mode)." }
+      }
+    },
+    "signals-camera-mipi": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "csi_clkp": { "$ref": "#/definitions/gpioRef", "description": "MIPI CSI-2 differential clock lane positive (required, dedicated MIPI DPHY pad on ESP32-P4; write 'GPIO<num>' even though signal is not GPIOMatrix-routed)." },
+        "csi_clkn": { "$ref": "#/definitions/gpioRef", "description": "MIPI CSI-2 differential clock lane negative (required, dedicated pad)." },
+        "csi_d0p":  { "$ref": "#/definitions/gpioRef", "description": "MIPI CSI-2 data lane 0 positive (required; minimum 1-lane config)." },
+        "csi_d0n":  { "$ref": "#/definitions/gpioRef", "description": "MIPI CSI-2 data lane 0 negative (required)." },
+        "csi_d1p":  { "$ref": "#/definitions/gpioRef", "description": "MIPI CSI-2 data lane 1 positive (optional; 2-lane mode only)." },
+        "csi_d1n":  { "$ref": "#/definitions/gpioRef", "description": "MIPI CSI-2 data lane 1 negative (optional)." },
+        "xclk":     { "$ref": "#/definitions/gpioRef", "description": "Optional sensor master clock output via GPIOMatrix." },
+        "pwdn":     { "$ref": "#/definitions/gpioRef", "description": "Optional sensor power-down control (GPIO matrix)." },
+        "reset":    { "$ref": "#/definitions/gpioRef", "description": "Optional sensor hardware reset (GPIO matrix)." }
+      },
+      "description": "ESP32-P4 only: MIPI CSI-2 2-lane camera controller signals. CLK + lane 0 differential pairs are the 1-lane minimum. Pair csi_d1p/d1n are required together for 2-lane mode. Pads are in the VDD_MIPI_DPHY dedicated I/O domain; the Pin Planner does not re-assign MIPI pads but stores the layout verbatim."
+    },
+    "signals-lcd-mipi": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dsi_clkp": { "$ref": "#/definitions/gpioRef", "description": "MIPI DSI differential clock lane positive (required, MIPI DPHY dedicated pad on ESP32-P4)." },
+        "dsi_clkn": { "$ref": "#/definitions/gpioRef", "description": "MIPI DSI differential clock lane negative (required)." },
+        "dsi_d0p":  { "$ref": "#/definitions/gpioRef", "description": "MIPI DSI data lane 0 positive (required; minimum 1-lane config)." },
+        "dsi_d0n":  { "$ref": "#/definitions/gpioRef", "description": "MIPI DSI data lane 0 negative (required)." },
+        "dsi_d1p":  { "$ref": "#/definitions/gpioRef", "description": "MIPI DSI data lane 1 positive (optional; 2-lane mode)." },
+        "dsi_d1n":  { "$ref": "#/definitions/gpioRef", "description": "MIPI DSI data lane 1 negative (optional)." },
+        "dsi_d2p":  { "$ref": "#/definitions/gpioRef", "description": "MIPI DSI data lane 2 positive (optional; 3-lane mode)." },
+        "dsi_d2n":  { "$ref": "#/definitions/gpioRef", "description": "MIPI DSI data lane 2 negative (optional)." },
+        "dsi_d3p":  { "$ref": "#/definitions/gpioRef", "description": "MIPI DSI data lane 3 positive (optional; 4-lane mode, max on P4)." },
+        "dsi_d3n":  { "$ref": "#/definitions/gpioRef", "description": "MIPI DSI data lane 3 negative (optional)." },
+        "te":       { "$ref": "#/definitions/gpioRef", "description": "Tearing Effect input from panel (GPIO matrix routed, optional)." },
+        "reset":    { "$ref": "#/definitions/gpioRef", "description": "Optional panel hardware reset (GPIO matrix routed)." },
+        "bl_pwm":   { "$ref": "#/definitions/gpioRef", "description": "Optional backlight PWM control (GPIO matrix routed)." }
+      },
+      "description": "ESP32-P4 only: MIPI DSI 4-lane display controller signals. Clock lane + lane 0 are the 1-lane minimum. Lane N positive/negative must be assigned together. Pads are in the VDD_MIPI_DPHY dedicated I/O domain."
+    }
+  }
+}
