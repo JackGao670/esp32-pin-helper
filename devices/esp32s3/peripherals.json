@@ -11,9 +11,11 @@
     "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/i2s.html",
     "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/lcd.html#rgb-lcd",
     "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/lcd/i80_lcd.html",
-    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/cam_dvp.html"
+    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/cam_dvp.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/twai.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/sdmmc_host.html"
   ],
-  "scope": "UART full duplex, I2C, standard SPI master, LEDC channels, ADC1/ADC2, RMT channels and I2S master; no high-speed timing validation. RMT TX/RX direction is not enforced (S3 channels 0-3 are TX-only and 4-7 RX-only). ADC2 shares hardware with Wi-Fi. Camera (DVP, 8-bit) and LCD (RGB, up to 16-bit documented; 24-bit signal pins are reserved as optional) are modeled at the baseline GPIOMatrix routing level; signal integrity and pixel clock constraints are NOT yet validated. Sensor and panel reset/powerdown pins are declared so the planner can reserve them. Usb0 models the fixed internal-USB pads (D- = GPIO19, D+ = GPIO20) shared with USB Serial/JTAG; the D+/D- pair must be routed together. lcd_mcu0 models the LCD 8080 (i80) parallel interface (DC/WR + optional RD/CS and an 8-bit baseline data bus d0-d7, extendable to 16-bit d8-d15) routed through GPIOMatrix; the i80 data-bus width is validated.",
+  "scope": "UART full duplex, I2C, standard SPI master, LEDC channels, ADC1/ADC2, RMT channels and I2S master; no high-speed timing validation. RMT TX/RX direction is not enforced (S3 channels 0-3 are TX-only and 4-7 RX-only). ADC2 shares hardware with Wi-Fi. Camera (DVP, 8-bit) and LCD (RGB, up to 16-bit documented; 24-bit signal pins are reserved as optional) are modeled at the baseline GPIOMatrix routing level; signal integrity and pixel clock constraints are NOT yet validated. Sensor and panel reset/powerdown pins are declared so the planner can reserve them. Usb0 models the fixed internal-USB pads (D- = GPIO19, D+ = GPIO20) shared with USB Serial/JTAG; the D+/D- pair must be routed together. lcd_mcu0 models the LCD 8080 (i80) parallel interface (DC/WR + optional RD/CS and an 8-bit baseline data bus d0-d7, extendable to 16-bit d8-d15) routed through GPIOMatrix; the i80 data-bus width is validated. twai0 models the single TWAI (CAN) controller (TX/RX required, BUS-OFF/CLKOUT optional) routed through GPIOMatrix; an external transceiver is required and is not part of the config. sdmmc0/sdmmc1 model the two SDMMC host slots (1-bit baseline clk/cmd/d0, 4-bit adds d1-d3); both slots are GPIOMatrix-routed so any GPIO may be used, and 8-line eMMC (d4-d7) is not modeled.",
   "peripherals": [
     {
       "type": "uart",
@@ -161,6 +163,28 @@
         { "id": "d13", "direction": "output", "routing": "gpio_matrix", "required": false },
         { "id": "d14", "direction": "output", "routing": "gpio_matrix", "required": false },
         { "id": "d15", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "8080 parallel data bit 15 (16-bit bus maximum on ESP32-S3)." }
+      ]
+    },
+    {
+      "type": "twai",
+      "instances": [0],
+      "signals": [
+        { "id": "tx", "direction": "output", "routing": "gpio_matrix", "required": true, "description": "TWAI transmit line to the external CAN transceiver (dominant bit = low)." },
+        { "id": "rx", "direction": "input", "routing": "gpio_matrix", "required": true, "description": "TWAI receive line from the external CAN transceiver; the transceiver must loop TX back to RX." },
+        { "id": "bus_off", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "BUS-OFF status output (optional)." },
+        { "id": "clkout", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "TWAI bit-clock output for external use (optional)." }
+      ]
+    },
+    {
+      "type": "sdmmc",
+      "instances": [0, 1],
+      "signals": [
+        { "id": "clk", "direction": "output", "routing": "gpio_matrix", "required": true, "description": "SD clock (host output)." },
+        { "id": "cmd", "direction": "bidirectional", "routing": "gpio_matrix", "required": true, "description": "SD command line (bidirectional)." },
+        { "id": "d0", "direction": "bidirectional", "routing": "gpio_matrix", "required": true, "description": "SD data line 0 (1-bit baseline)." },
+        { "id": "d1", "direction": "bidirectional", "routing": "gpio_matrix", "required": false, "description": "SD data line 1 (4-bit mode)." },
+        { "id": "d2", "direction": "bidirectional", "routing": "gpio_matrix", "required": false, "description": "SD data line 2 (4-bit mode)." },
+        { "id": "d3", "direction": "bidirectional", "routing": "gpio_matrix", "required": false, "description": "SD data line 3 (4-bit mode)." }
       ]
     }
   ]

@@ -16,9 +16,11 @@
     "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/usb_serial_jtag.html",
     "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/cam_ctlr_cam_dvp.html",
     "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/cam_ctlr_cam_ctlr_mipi.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/twai.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32p4/api-reference/peripherals/sdmmc_host.html",
     "https://www.espressif.com/sites/default/files/documentation/esp32-p4_datasheet_en.pdf (Ch. 2.1.3 High-Speed I/O Matrix + MIPI I/O Domain)"
   ],
-  "scope": "Standard UART0-4, HP I2C0-1, SPI2 standard master, LEDC channels, ADC1, RMT channels and I2S master only; other SPI hosts, LP and high-speed modes not modeled. P4 datasheet lists a second ADC controller but its external channels are not identified in the GPIO summary, so ADC2 is not modeled. RMT channels are modeled as one GPIO per channel without TX/RX direction.\n\nDisplay/Camera peripherals: (1) camera0 = DVP 8-bit Camera interface routed through GPIOMatrix (same as ESP32-S3 LCD_CAM CAM DVP channel). (2) camera1 = MIPI CSI-2 2-lane receiver with dedicated differential pads: CLKP/CLKN + DATAP0/DATAN0 (lane 0 required for 1-lane mode), DATAP1/DATAN1 (lane 1 optional for 2-lane mode), refclk (output from P4, optional GPIO) and xclk/csi_enable/dvp_enable (optional GPIO-level control pads). MIPI pads are in VDD_MIPI_DPHY dedicated I/O domain, NOT routable through GPIOMatrix. (3) lcd0 = RGB LCD parallel interface (same as ESP32-S3 LCD_CAM, up to 24-bit d0-d23 + pclk/vsync/hsync/de), GPIOMatrix routed. (4) lcd1 = MIPI DSI 4-lane (clock lane + 4 data lanes), DPHY dedicated differential pads with dedicated I/O domain; lane 0 required for 1-lane mode, lanes 1/2/3 optional for wider busses; te (Tearing Effect) input and reset optional GPIO. ISP/H.264 and LP_CAM are not modeled here.",
+  "scope": "Standard UART0-4, HP I2C0-1, SPI2 standard master, LEDC channels, ADC1, RMT channels and I2S master only; other SPI hosts, LP and high-speed modes not modeled. P4 datasheet lists a second ADC controller but its external channels are not identified in the GPIO summary, so ADC2 is not modeled. RMT channels are modeled as one GPIO per channel without TX/RX direction.\n\nDisplay/Camera peripherals: (1) camera0 = DVP 8-bit Camera interface routed through GPIOMatrix (same as ESP32-S3 LCD_CAM CAM DVP channel). (2) camera1 = MIPI CSI-2 2-lane receiver with dedicated differential pads: CLKP/CLKN + DATAP0/DATAN0 (lane 0 required for 1-lane mode), DATAP1/DATAN1 (lane 1 optional for 2-lane mode), refclk (output from P4, optional GPIO) and xclk/csi_enable/dvp_enable (optional GPIO-level control pads). MIPI pads are in VDD_MIPI_DPHY dedicated I/O domain, NOT routable through GPIOMatrix. (3) lcd0 = RGB LCD parallel interface (same as ESP32-S3 LCD_CAM, up to 24-bit d0-d23 + pclk/vsync/hsync/de), GPIOMatrix routed. (4) lcd1 = MIPI DSI 4-lane (clock lane + 4 data lanes), DPHY dedicated differential pads with dedicated I/O domain; lane 0 required for 1-lane mode, lanes 1/2/3 optional for wider busses; te (Tearing Effect) input and reset optional GPIO. ISP/H.264 and LP_CAM are not modeled here. twai0-twai2 model the three TWAI (CAN) controllers (TX/RX required, BUS-OFF/CLKOUT optional) routed through GPIOMatrix; an external transceiver is required. sdmmc1 models SDMMC host slot 1, which is GPIOMatrix-routed (any GPIO) with a 1-bit baseline clk/cmd/d0 and an optional 4-bit extension d1-d3; slot 0 is dedicated to UHS-I and is not GPIO-matrix routable, so it is not modeled.",
   "peripherals": [
     { "type": "uart", "instances": [0, 1, 2, 3, 4], "signals": [
       { "id": "tx", "direction": "output", "routing": "gpio_matrix", "required": true },
@@ -149,6 +151,20 @@
       { "id": "te", "direction": "input", "routing": "gpio_matrix", "required": false, "description": "Tearing Effect input from panel (routed via GPIOMatrix)" },
       { "id": "reset", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Optional panel hardware reset (active low, GPIOMatrix routed)" },
       { "id": "bl_pwm", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "Optional backlight PWM control (GPIOMatrix routed)" }
+    ] },
+    { "type": "twai", "instances": [0, 1, 2], "signals": [
+      { "id": "tx", "direction": "output", "routing": "gpio_matrix", "required": true, "description": "TWAI transmit line to the external CAN transceiver (dominant bit = low)." },
+      { "id": "rx", "direction": "input", "routing": "gpio_matrix", "required": true, "description": "TWAI receive line from the external CAN transceiver; the transceiver must loop TX back to RX." },
+      { "id": "bus_off", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "BUS-OFF status output (optional)." },
+      { "id": "clkout", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "TWAI bit-clock output for external use (optional)." }
+    ] },
+    { "type": "sdmmc", "instances": [1], "signals": [
+      { "id": "clk", "direction": "output", "routing": "gpio_matrix", "required": true, "description": "SD clock (host output); slot 1 is GPIOMatrix-routed so any GPIO may be used." },
+      { "id": "cmd", "direction": "bidirectional", "routing": "gpio_matrix", "required": true, "description": "SD command line (bidirectional)." },
+      { "id": "d0", "direction": "bidirectional", "routing": "gpio_matrix", "required": true, "description": "SD data line 0 (1-bit baseline)." },
+      { "id": "d1", "direction": "bidirectional", "routing": "gpio_matrix", "required": false, "description": "SD data line 1 (4-bit mode)." },
+      { "id": "d2", "direction": "bidirectional", "routing": "gpio_matrix", "required": false, "description": "SD data line 2 (4-bit mode)." },
+      { "id": "d3", "direction": "bidirectional", "routing": "gpio_matrix", "required": false, "description": "SD data line 3 (4-bit mode)." }
     ] }
   ]
 }

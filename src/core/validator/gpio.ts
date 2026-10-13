@@ -180,6 +180,17 @@ const peripheralRule: ValidationRule = { id: "peripherals", check(config, ctx) {
           message: `${owner}: partial 16-bit 8080 (i80) bus; missing D8-D15 pins: ${missing16.join(", ")}.` });
       }
     }
+    if (peripheral.type === "sdmmc") {
+      // 1-bit baseline (clk/cmd/d0) is covered by the required-signal warnings above.
+      // Upper data lines are optional, but once any of d1-d3 is wired the 4-bit bus must be complete.
+      const upper = ["d1", "d2", "d3"];
+      const anyUpper = upper.some(id => peripheral.signals[id]);
+      const missingUpper = upper.filter(id => !peripheral.signals[id]);
+      if (anyUpper && missingUpper.length) {
+        problems.push({ ...location, severity: "warning",
+          message: `${owner}: 4-bit SD bus partially wired; missing ${missingUpper.join(", ").toUpperCase()}. Assign all of D1-D3 for 4-bit mode, or use the 1-bit baseline (clk/cmd/d0).` });
+      }
+    }
     if (peripheral.type === "camera_mipi") {
       const pairs: [string, string][] = [["csi_clkp", "csi_clkn"], ["csi_d0p", "csi_d0n"], ["csi_d1p", "csi_d1n"]];
       for (const [p, n] of pairs) {

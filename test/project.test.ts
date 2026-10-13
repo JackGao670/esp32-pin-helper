@@ -36,12 +36,18 @@ test("pinconfig.schema.json v1 covers target chips, gpio functions and P1 periph
   assert.deepEqual(schema.properties.target.properties.chip.enum, ["esp32s3", "esp32c6", "esp32p4"]);
   assert.deepEqual(schema.properties.pins.items.properties.function.enum, ["GPIO_INPUT", "GPIO_OUTPUT", "GPIO_OPEN_DRAIN"]);
   const peripheral = schema.definitions.peripheral;
-  assert.deepEqual(peripheral.properties.type.enum, ["uart", "i2c", "spi", "ledc", "adc", "rmt", "i2s", "camera", "lcd", "lcd_mcu", "camera_mipi", "lcd_mipi", "usb"]);
+  assert.deepEqual(peripheral.properties.type.enum, ["uart", "i2c", "spi", "ledc", "adc", "rmt", "i2s", "camera", "lcd", "lcd_mcu", "camera_mipi", "lcd_mipi", "usb", "twai", "sdmmc"]);
   assert.equal("signals-uart" in schema.definitions, true);
   assert.equal("signals-adc" in schema.definitions, true);
   assert.equal("signals-i2s" in schema.definitions, true);
   assert.equal("signals-lcd-mcu" in schema.definitions, true);
   assert.equal("signals-usb" in schema.definitions, true);
+  assert.equal("signals-twai" in schema.definitions, true);
+  assert.equal("signals-sdmmc" in schema.definitions, true);
+  assert.equal(schema.definitions["signals-twai"].additionalProperties, false);
+  assert.equal(schema.definitions["signals-sdmmc"].additionalProperties, false);
+  assert.deepEqual(Object.keys(schema.definitions["signals-twai"].properties).sort(), ["tx", "rx", "bus_off", "clkout"].sort());
+  assert.deepEqual(Object.keys(schema.definitions["signals-sdmmc"].properties).sort(), ["clk", "cmd", "d0", "d1", "d2", "d3"].sort());
   assert.ok(schema.definitions["signals-adc"].description.includes("ADC1"));
   // Schema's gpioRef regex should reject malformed values.
   const gpioPattern = new RegExp(schema.definitions.gpioRef.pattern);
@@ -147,4 +153,23 @@ test("schema root allOf constrains per-chip owner names and per-type instance en
   const lcdMipiProps = Object.keys(schema.definitions["signals-lcd-mipi"].properties);
   assert.equal(lcdMipiProps.includes("dsi_d0p") && lcdMipiProps.includes("dsi_d3n"), true);
   assert.equal(lcdMipiProps.includes("te") && lcdMipiProps.includes("bl_pwm"), true);
+
+  // TWAI (CAN) is a GPIOMatrix-routed type with a chip-specific controller count.
+  assert.deepEqual(instEnumForType("esp32s3", "twai"), [0]);
+  assert.deepEqual(instEnumForType("esp32c6", "twai"), [0, 1]);
+  assert.deepEqual(instEnumForType("esp32p4", "twai"), [0, 1, 2]);
+  assert.equal(owners("esp32s3").has("twai0"), true);
+  assert.equal(owners("esp32c6").has("twai1"), true);
+  assert.equal(owners("esp32p4").has("twai2"), true);
+  assert.equal(owners("esp32s3").has("twai1"), false);
+
+  // SDMMC host: S3 has two GPIOMatrix slots, P4 only slot 1, C6 has no host at all.
+  assert.deepEqual(instEnumForType("esp32s3", "sdmmc"), [0, 1]);
+  assert.deepEqual(instEnumForType("esp32p4", "sdmmc"), [1]);
+  assert.equal(owners("esp32s3").has("sdmmc0"), true);
+  assert.equal(owners("esp32s3").has("sdmmc1"), true);
+  assert.equal(owners("esp32p4").has("sdmmc1"), true);
+  assert.equal(owners("esp32p4").has("sdmmc0"), false);
+  assert.equal(owners("esp32c6").has("sdmmc0"), false);
+  assert.equal(instEnumForType("esp32c6", "sdmmc"), undefined);
 });

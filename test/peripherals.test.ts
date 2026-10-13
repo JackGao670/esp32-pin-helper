@@ -296,3 +296,66 @@ test("LCD 8080 (i80) bus flags incomplete baseline and partial 16-bit data", () 
   // C6 has no LCD_CAM, so lcd_mcu is not a known peripheral there.
   assert.equal(definition("lcd_mcu", 0, "esp32c6"), undefined);
 });
+
+test("TWAI/CAN controllers expose TX/RX on any GPIO and require both lines", () => {
+  // Controller counts are chip-specific: 1 on S3, 2 on C6, 3 on P4.
+  assert.deepEqual(definition("twai", 0, "esp32s3")!.signals.filter(s => s.required).map(s => s.id), ["tx", "rx"]);
+  assert.equal(definition("twai", 1, "esp32s3"), undefined);
+  assert.ok(definition("twai", 1, "esp32c6"));
+  assert.ok(definition("twai", 2, "esp32p4"));
+  assert.equal(definition("twai", 3, "esp32p4"), undefined);
+  // TX is an output and RX an input; both are routed through the GPIO matrix, so any
+  // direction-capable GPIO qualifies (an external transceiver is required and not modeled).
+  const tx = definition("twai", 0, "esp32s3")!.signals.find(s => s.id === "tx")!;
+  const rx = definition("twai", 0, "esp32s3")!.signals.find(s => s.id === "rx")!;
+  assert.equal(tx.routing, "gpio_matrix");
+  assert.equal(rx.routing, "gpio_matrix");
+  const pin = device.pins[0];
+  assert.equal(supportsSignal({ ...pin, capabilities: { ...pin.capabilities, output: false } }, tx), false);
+  assert.equal(supportsSignal({ ...pin, capabilities: { ...pin.capabilities, input: false } }, rx), false);
+  // TX and RX are required: an empty controller warns for both lines.
+  let config = addPeripheral(createConfig("esp32s3"), "twai", 0);
+  const emptyWarns = validateGpio(config).filter(p => p.severity === "warning" && /twai0\./.test(p.message));
+  assert.deepEqual(emptyWarns.map(p => p.message).sort(), ["twai0.RX is not assigned.", "twai0.TX is not assigned."]);
+  config = setSignal(config, "twai0", "tx", 4);
+  config = setSignal(config, "twai0", "rx", 5);
+  assert.ok(!validateGpio(config).some(p => /twai0\.(TX|RX) is not assigned/.test(p.message)),
+    "wiring both TX and RX should clear the required-line warnings");
+});
+
+test("SDMMC host bus enforces the 1-bit baseline and 4-bit completeness", () => {
+  // S3 exposes two GPIOMatrix-routed slots; P4 only slot 1; C6 has no SDMMC host.
+  assert.deepEqual(definition("sdmmc", 0, "esp32s3")!.signals.filter(s => s.required).map(s => s.id), ["clk", "cmd", "d0"]);
+  assert.ok(definition("sdmmc", 1, "esp32s3"));
+  assert.ok(definition("sdmmc", 1, "esp32p4"));
+  assert.equal(definition("sdmmc", 0, "esp32p4"), undefined);
+  assert.equal(definition("sdmmc", 0, "esp32c6"), undefined);
+  assert.throws(() => addPeripheral(createConfig("esp32c6"), "sdmmc", 0));
+
+  // Missing 1-bit baseline lines → required-signal warnings.
+  const empty = addPeripheral(createConfig("esp32s3"), "sdmmc", 0);
+  const emptyWarns = validateGpio(empty).filter(p => p.severity === "warning" && /sdmmc0\./.test(p.message)).map(p => p.message).sort();
+  assert.deepEqual(emptyWarns, ["sdmmc0.CLK is not assigned.", "sdmmc0.CMD is not assigned.", "sdmmc0.D0 is not assigned."]);
+
+  // 1-bit baseline (clk/cmd/d0) with no upper lines → no 4-bit warning.
+  let oneBit = addPeripheral(createConfig("esp32s3"), "sdmmc", 0);
+  oneBit = setSignal(oneBit, "sdmmc0", "clk", 5);
+  oneBit = setSignal(oneBit, "sdmmc0", "cmd", 6);
+  oneBit = setSignal(oneBit, "sdmmc0", "d0", 7);
+  const oneBitProbs = validateGpio(oneBit);
+  assert.ok(!oneBitProbs.some(p => /4-bit SD bus/.test(p.message)), "1-bit baseline should not trigger the 4-bit warning");
+  assert.ok(!oneBitProbs.some(p => /sdmmc0\.(CLK|CMD|D0) is not assigned/.test(p.message)));
+
+  // Partial 4-bit: d1 wired without d2/d3 → warn about the incomplete group.
+  const partial = setSignal(empty, "sdmmc0", "d1", 8);
+  assert.ok(validateGpio(partial).some(p => /4-bit SD bus partially wired; missing D2, D3/.test(p.message)),
+    "wiring only D1 must flag the incomplete 4-bit group");
+
+  // Full 4-bit bus → no completeness warning.
+  let fourBit = addPeripheral(createConfig("esp32s3"), "sdmmc", 1);
+  for (const [signal, gpio] of [["clk", 5], ["cmd", 6], ["d0", 7], ["d1", 8], ["d2", 9], ["d3", 10]] as [string, number][]) {
+    fourBit = setSignal(fourBit, "sdmmc1", signal, gpio);
+  }
+  assert.ok(!validateGpio(fourBit).some(p => /4-bit SD bus/.test(p.message)),
+    "a fully wired 4-bit bus should not warn");
+});
