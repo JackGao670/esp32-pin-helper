@@ -23,11 +23,12 @@ The contract with the user's firmware is the JSON file, nothing more.
 │                                                                  │
 │  src/extension.ts ── commands, webview panel, file I/O           │
 │        │                                                         │
-│        ├── src/vscode/       diagnostics · home view · detector  │
+│        ├── src/vscode/       ai · diagnostics · home · detector   │
 │        ├── src/core/model/   config · peripherals · boards · msg │
 │        ├── src/core/resolver/peripherals.ts   signal → GPIO sets │
 │        ├── src/core/validator/gpio.ts         rule engine        │
 │        ├── src/core/optimizer/assign.ts       auto-assignment    │
+│        ├── src/core/ai/      intent · prompt  (LLM → optimizer)  │
 │        └── src/database/     loader · boardLoader                │
 │                                                                  │
 │  data (bundled at build time)                                    │
@@ -158,7 +159,49 @@ candidate pool when a board is active, with a fallback to the full set only when
 Both simply feed the same `recommendAssignment` call, which is why "Accept"/"Replace" need no new API —
 they are re-solves with a tighter context.
 
-## 7. Host ↔ WebView protocol
+## 7. AI intent layer — the model never picks a GPIO
+
+[core/ai/intent.ts](file:///d:/workspace/esp-pin-planer/esp32-pin-helper/src/core/ai/intent.ts) ·
+[core/ai/prompt.ts](file:///d:/workspace/esp-pin-planer/esp32-pin-helper/src/core/ai/prompt.ts).
+
+The contract with the language model is deliberately narrow. It may only answer with an **intent** — the
+target chip, which peripheral instances to configure, which signals to wire, and (only for pins the user
+named explicitly) plain GPIO functions:
+
+```jsonc
+{ "chip": "esp32p4",
+  "avoidStrapping": true,
+  "peripherals": [{ "type": "camera", "instance": 0 }, { "type": "i2c", "instance": 0 }],
+  "pinFunctions": [] }
+```
+
+It is never asked **which GPIO** a signal lands on and never writes C/C++. Any pin number the model
+volunteers for a peripheral is discarded by `parseIntent()` (unknown keys are ignored), so a hallucinated
+route cannot leak through. The pipeline is:
+
+```
+LLM → intent JSON ──parseIntent()──► IntentSpec ──planFromIntent()──► config ──validateGpio()──► plan
+                                             (recommendAssignment)
+```
+
+`planFromIntent()` re-uses the same `recommendAssignment` the auto-assign wizard calls, so AI plans are
+eligible for the same board defaults, strapping/reserved avoidance and occupied-pin exclusion. Requests
+that cannot be honoured (a peripheral absent on the chip, a signal id that does not exist, a bus that
+cannot fit) are reported in `dropped[]` rather than silently invented, and the validator's `problems[]`
+decides whether the result is offered at all. The prompt itself is built from the same databases
+(`buildCatalogue`, `pinsToAvoid`), so the model is told the chip's real instances and signal ids instead
+of guessing.
+
+**Repair mode.** `intentFromConfig()` recovers the intent behind an existing file; `deriveRepairContext()`
+pins every signal the validator did **not** flag and marks the plain pins as occupied, so the first repair
+iteration is a minimal change. The loop in `vscode/aiAssistant.ts` then re-asks, re-solves and re-checks up
+to three times, and only a configuration that validates clean is offered for **Apply** — otherwise the
+user gets the remaining errors and an explanation.
+
+Everything in `core/ai/**` is pure (no `vscode` import) and unit-tested; the host module only owns the
+chat participant, the proposal store and the `WorkspaceEdit` that writes the file.
+
+## 8. Host ↔ WebView protocol
 
 [core/model/messages.ts](file:///d:/workspace/esp-pin-planer/esp32-pin-helper/src/core/model/messages.ts).
 
@@ -172,7 +215,7 @@ The host serialises all messages through a promise queue, re-reads the file befo
 rejects a mutation if the on-disk text no longer matches the revision the WebView saw — so an external
 edit can never be clobbered. File watchers on `.pinconfig.json` and `sdkconfig` keep the panel live.
 
-## 8. Build & test
+## 9. Build & test
 
 - **Bundling**: `esbuild` bundles the extension into `dist/extension.js`, inlining the chip/board JSON
   (so the raw `devices/**` and `boards/**` trees are *not* shipped); `vite` bundles the WebView into
@@ -180,7 +223,8 @@ edit can never be clobbered. File watchers on `.pinconfig.json` and `sdkconfig` 
 - **Packaging**: `.vscodeignore` keeps only `dist/**`, `schemas/**`, `resources/**` and `package.json`.
 - **Tests**: `tsx --test test/*.test.ts` — data integrity, resolver legality, validator rules, config
   round-trips, the optimizer (board defaults, strapping avoidance, occupied pins, Top-N, per-signal
-  pin/block) and a 13-scenario combination matrix that asserts success, legality and a P95 latency
+  pin/block), the AI intent layer (strict parsing, JSON extraction, planning, repair context, prompts)
+  and a 13-scenario combination matrix that asserts success, legality and a P95 latency
   budget under 500 ms.
 - **Browser preview**: `npm run dev:webview` serves the WebView standalone at `127.0.0.1:5173` for UI
   work without launching VS Code.

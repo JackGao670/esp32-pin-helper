@@ -25,6 +25,8 @@ It deliberately does **not** generate C/C++ code. The single artifact it writes 
   USB D+/D− pairing, direction conflicts and reserved-pin reuse.
 - **Pin auto-assignment** (`Auto-assign` in the peripheral panel): ranked Top-N plans, scored to prefer
   default routes, avoid strapping / reserved / occupied pins.
+- **AI assistant** (`@espPinPlanner`): describe the peripherals you want in chat and get a validated
+  `.pinconfig.json`; a Problems quick fix ("Ask AI to fix") repairs the current one.
 - **Per-signal review**: `Accept` a pin to lock it, `Replace` to reject it — the solver re-routes the rest.
 - **Candidate highlighting** on the pinout so you can see every recommended GPIO at a glance.
 
@@ -75,6 +77,32 @@ Press <kbd>F5</kbd> in VS Code to launch an Extension Development Host.
 | ESP Pin Planner: Create New Pin Config | `espPinPlanner.create` | Create `.pinconfig.json`, pre-selecting the chip detected from `sdkconfig`. |
 | ESP Pin Planner: Validate Pin Config | `espPinPlanner.validate` | Re-run all implemented checks and report to the Problems panel. |
 | ESP Pin Planner: Select Target Chip | `espPinPlanner.selectTarget` | Switch the target chip; existing assignments are kept and re-checked. |
+| ESP Pin Planner: Fix Pin Config with AI | `espPinPlanner.fixWithAi` | Ask the AI to repair the open `.pinconfig.json` (also available from the Problems quick fix). |
+
+## AI assistant
+
+The **`@espPinPlanner`** chat participant turns a description into a checked configuration. It needs a
+language model in the window (for example **GitHub Copilot Chat**); without one the chat politely says so
+and nothing else changes.
+
+```
+@espPinPlanner /generate configure OV5647 camera, SPI LCD, I²C and a UART on the ESP32-P4, avoid strapping pins
+@espPinPlanner /fix resolve the problems reported for .pinconfig.json
+```
+
+The model is only asked **what** to wire — the target chip, the peripheral instances, the signals and any
+plain GPIO functions. It is never asked **which** GPIO, and any pin number it volunteers is ignored.
+Every proposal is then:
+
+1. handed to the deterministic optimizer, which assigns legal GPIOs, and
+2. re-checked by the same validator that powers the Problems panel.
+
+Only a configuration that passes both is offered for review; if it cannot be solved, you get an
+explanation instead of a broken file. Nothing is written until you click **Apply**.
+
+From the Problems panel, an error on `.pinconfig.json` also offers an **Ask AI to fix** quick fix. The
+repair loop keeps the assignments that were already valid pinned, re-solves the rest, and stops as soon as
+the configuration is legal (or reports why it could not get there).
 
 ## Settings
 

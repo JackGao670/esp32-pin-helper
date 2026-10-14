@@ -7,6 +7,7 @@ import { devices, getDevice } from "./database/loader";
 import { addPeripheral, removePeripheral, setSignal, selectTarget } from "./core/model/peripherals";
 import { candidates, definition } from "./core/resolver/peripherals";
 import { PinDiagnostics } from "./vscode/diagnostics";
+import { AiAssistant } from "./vscode/aiAssistant";
 import { PlannerHomeProvider } from "./vscode/homeView";
 import { detectTarget } from "./vscode/projectDetector";
 import { projectNotice } from "./core/model/project";
@@ -26,6 +27,14 @@ function readExtensionSettings(overrides: Partial<PlannerSettings> = {}): Planne
 export function activate(context: vscode.ExtensionContext): void {
   const diagnostics = new PinDiagnostics();
   const home = new PlannerHomeProvider(readExtensionSettings);
+  // Register the AI participant/commands first so the pin-planner code actions keep priority.
+  const ai = new AiAssistant({
+    readSettings: readExtensionSettings,
+    refreshDiagnostics: uri => diagnostics.refresh(uri, true)
+  });
+  ai.register(context);
+  ai.registerCommands();
+  context.subscriptions.push(ai);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider("espPinPlanner.home", home),
     vscode.workspace.onDidChangeWorkspaceFolders(() => void home.refresh()),

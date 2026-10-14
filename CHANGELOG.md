@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **AI assistant** (`@espPinPlanner` chat participant, `/generate` and `/fix` commands): describe the
+  peripherals you want and get a validated `.pinconfig.json`.
+- **"Ask AI to fix"** — a Problems quick fix (and `espPinPlanner.fixWithAi` command) that asks the model
+  to repair the configuration and re-checks it before offering to apply it.
+- AI intent layer (`src/core/ai/`): the model may only say *what* to wire (chip, peripheral instances,
+  signals, plain GPIO functions), never *which* GPIO. The deterministic optimizer assigns the pins and
+  the validator gates the result, so a hallucinated route can never reach `.pinconfig.json`.
 - Release engineering: `README.md`, `OVERVIEW.md`, `CHANGELOG.md`, `LICENSE`, extension icon and Marketplace metadata.
 
 ## [0.0.3] - 2026-10-14

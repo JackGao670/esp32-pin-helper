@@ -11,13 +11,27 @@
   "categories": ["Other"],
   "galleryBanner": { "color": "#12308f", "theme": "dark" },
   "main": "./dist/extension.js",
-  "activationEvents": ["onCommand:espPinPlanner.open", "onCommand:espPinPlanner.validate", "onCommand:espPinPlanner.create", "onCommand:espPinPlanner.selectTarget", "onView:espPinPlanner.home", "workspaceContains:**/.pinconfig.json", "onLanguage:json"],
+  "activationEvents": ["onCommand:espPinPlanner.open", "onCommand:espPinPlanner.validate", "onCommand:espPinPlanner.create", "onCommand:espPinPlanner.selectTarget", "onCommand:espPinPlanner.fixWithAi", "onChatParticipant:espPinPlanner", "onView:espPinPlanner.home", "workspaceContains:**/.pinconfig.json", "onLanguage:json"],
   "contributes": {
+    "chatParticipants": [
+      {
+        "id": "espPinPlanner",
+        "name": "espPinPlanner",
+        "fullName": "ESP Pin Planner",
+        "description": "Plan ESP32-S3 / C6 / P4 pins from a description; the optimizer assigns the pins and the validator checks them.",
+        "isSticky": true,
+        "commands": [
+          { "name": "generate", "description": "Describe the peripherals to configure; get a validated .pinconfig.json." },
+          { "name": "fix", "description": "Repair the current .pinconfig.json using the Problems reported for it." }
+        ]
+      }
+    ],
     "commands": [
       { "command": "espPinPlanner.open", "title": "Open Pin Planner", "category": "ESP Pin Planner", "icon": "$(open-preview)" },
       { "command": "espPinPlanner.validate", "title": "Validate Pin Config", "category": "ESP Pin Planner", "icon": "$(check)" },
       { "command": "espPinPlanner.create", "title": "Create New Pin Config", "category": "ESP Pin Planner", "icon": "$(new-file)" },
-      { "command": "espPinPlanner.selectTarget", "title": "Select Target Chip", "category": "ESP Pin Planner", "icon": "$(circuit-board)" }
+      { "command": "espPinPlanner.selectTarget", "title": "Select Target Chip", "category": "ESP Pin Planner", "icon": "$(circuit-board)" },
+      { "command": "espPinPlanner.fixWithAi", "title": "Fix Pin Config with AI", "category": "ESP Pin Planner", "icon": "$(sparkle)" }
     ],
     "viewsContainers": {
       "activitybar": [
@@ -32,6 +46,9 @@
     "menus": {
       "editor/title": [
         { "command": "espPinPlanner.open", "when": "resourceFilename == .pinconfig.json", "group": "navigation@1" }
+      ],
+      "editor/context": [
+        { "command": "espPinPlanner.fixWithAi", "when": "resourceFilename == .pinconfig.json", "group": "espPinPlanner@1" }
       ],
       "view/title": [
         { "command": "espPinPlanner.validate", "when": "view == espPinPlanner.home", "group": "navigation@1" }
