@@ -35,6 +35,19 @@ test("occupied GPIOs are never reused", () => {
   assert.ok(!gpios.includes(8) && !gpios.includes(9), "occupied pins must be excluded");
 });
 
+test("an accepted signal is pinned to its GPIO", () => {
+  const [plan] = recommendAssignment([{ type: "i2c", instance: 0 }], { maxPlans: 1 }, "esp32s3",
+    { board: s3Hints, pinned: { "i2c0.sda": 21 } });
+  assert.equal(plan.peripherals.i2c0.signals.sda, "GPIO21", "the pinned pin must be honoured");
+});
+
+test("a rejected pin is dropped for that signal only", () => {
+  const [plan] = recommendAssignment([{ type: "i2c", instance: 0 }], { maxPlans: 1 }, "esp32s3",
+    { board: s3Hints, blocked: { "i2c0.sda": [8] } });
+  assert.notEqual(plan.peripherals.i2c0.signals.sda, "GPIO8", "the rejected pin must be skipped for sda");
+  assert.equal(plan.peripherals.i2c0.signals.scl, "GPIO9", "the other signal keeps its board default route");
+});
+
 test("returns up to maxPlans ranked plans with conflict-free pins", () => {
   const plans = recommendAssignment([{ type: "i2c", instance: 0 }], { maxPlans: 3 }, "esp32s3", { board: s3Hints });
   assert.ok(plans.length >= 1 && plans.length <= 3);

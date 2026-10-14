@@ -99,9 +99,14 @@ dt { color: var(--muted); } dd { margin: 0; }
 .plan-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
 .plan-tabs .secondary { font-size: 10px; padding: 4px 8px; }
 .plan-tabs .secondary.active { border-color: var(--accent); color: var(--accent); }
-.plan-signals { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 4px; }
-.plan-signals li { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; }
-.plan-signals li > span { color: var(--muted); overflow-wrap: anywhere; }
+.plan-signals { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 5px; }
+.plan-signals li { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.plan-signals li.active { color: var(--accent); }
+.plan-signal-name { flex: 1; color: var(--muted); overflow-wrap: anywhere; }
+.plan-signals li.active .plan-signal-name { color: var(--accent); }
+.plan-signal-name .locked { font-style: normal; margin-left: 6px; font-size: 9px; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); }
+.plan-actions { display: flex; gap: 4px; }
+.plan-actions .secondary { font-size: 10px; padding: 3px 7px; }
 .plan-signals code { cursor: pointer; }
 .plan-signals code:hover { color: var(--accent); }
 .plan-warnings { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 3px; }

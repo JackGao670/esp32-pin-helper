@@ -81,6 +81,10 @@ export interface RecommendContext {
   occupied?: number[];
   /** Active board hints; enables board-default preference and reserved-pin exclusion. */
   board?: BoardHints;
+  /** Accepted signals — "owner.signal" → GPIO. A pinned signal keeps its pin while the rest re-route. */
+  pinned?: Record<string, number>;
+  /** Rejected pins per signal — "owner.signal" → GPIOs that must not be used for that signal. */
+  blocked?: Record<string, number[]>;
 }
 
 interface Slot {
@@ -89,6 +93,20 @@ interface Slot {
   instance: number;
   signal: SignalDefinition;
 }
+
+/** Resolved inputs shared by the per-slot candidate builder. */
+interface SolveEnv {
+  chip: string;
+  board: BoardHints | undefined;
+  prefs: Required<OptimizerPreferences>;
+  pins: Map<number, PinDefinition>;
+  occupied: Set<number>;
+  pinned: Record<string, number>;
+  blocked: Record<string, number[]>;
+  cap: number;
+}
+
+const slotKey = (slot: Slot): string => `${slot.owner}.${slot.signal.id}`;
 
 interface Choice {
   owner: string;
@@ -149,19 +167,24 @@ function scoreChoice(slot: Slot, gpio: number, board: BoardHints | undefined,
 
 // Candidate GPIOs for a slot, best-scored first. Board-reserved pins are excluded
 // when a board is active, falling back to the full set only if nothing else remains.
-// `cap` bounds the branching factor; it is widened for slot-heavy builds because every
-// slot prefers the same low GPIOs, so a fixed cap would starve the search (see caller).
-function orderedCandidates(slot: Slot, chip: string, board: BoardHints | undefined,
-                           occupied: Set<number>, prefs: Required<OptimizerPreferences>,
-                           pins: Map<number, PinDefinition>, cap: number): number[] {
-  const all = candidates(slot.signal, chip, slot.instance).filter(gpio => !occupied.has(gpio));
-  const reserved = new Set(board?.reservedGpios ?? []);
-  const preferred = prefs.avoidBoardReserved && board ? all.filter(gpio => !reserved.has(gpio)) : all;
-  const pool = preferred.length ? preferred : all;
+// An accepted signal is pinned to its single GPIO; a rejected pin is dropped for that
+// signal only. `env.cap` bounds the branching factor; it is widened for slot-heavy
+// builds because every slot prefers the same low GPIOs, so a fixed cap would starve
+// the search (see caller).
+function orderedCandidates(slot: Slot, env: SolveEnv): number[] {
+  const key = slotKey(slot);
+  const blocked = new Set(env.blocked[key] ?? []);
+  const legal = candidates(slot.signal, env.chip, slot.instance)
+    .filter(gpio => !env.occupied.has(gpio) && !blocked.has(gpio));
+  const pinnedGpio = env.pinned[key];
+  if (pinnedGpio !== undefined) return legal.includes(pinnedGpio) ? [pinnedGpio] : [];
+  const reserved = new Set(env.board?.reservedGpios ?? []);
+  const preferred = env.prefs.avoidBoardReserved && env.board ? legal.filter(gpio => !reserved.has(gpio)) : legal;
+  const pool = preferred.length ? preferred : legal;
   return pool
-    .map(gpio => ({ gpio, score: scoreChoice(slot, gpio, board, prefs, pins.get(gpio)).score }))
+    .map(gpio => ({ gpio, score: scoreChoice(slot, gpio, env.board, env.prefs, env.pins.get(gpio)).score }))
     .sort((a, b) => b.score - a.score || a.gpio - b.gpio)
-    .slice(0, cap)
+    .slice(0, env.cap)
     .map(entry => entry.gpio);
 }
 
@@ -225,8 +248,12 @@ export function recommendAssignment(peripherals: PeripheralRequest[],
   const candidatesBySlot = new Map<Slot, number[]>();
   // Keep at least as many candidates per slot as there are slots: without room to spread
   // out, slot-heavy builds (e.g. a 22-signal Camera + 8080 LCD) cannot fit on one chip.
-  const candidateCap = Math.max(MAX_CANDIDATES_PER_SLOT, slots.length * 2);
-  for (const slot of slots) candidatesBySlot.set(slot, orderedCandidates(slot, chip, board, occupied, prefs, pins, candidateCap));
+  const env: SolveEnv = {
+    chip, board, prefs, pins, occupied,
+    pinned: context.pinned ?? {}, blocked: context.blocked ?? {},
+    cap: Math.max(MAX_CANDIDATES_PER_SLOT, slots.length * 2)
+  };
+  for (const slot of slots) candidatesBySlot.set(slot, orderedCandidates(slot, env));
   const ordered = [...slots].sort((a, b) => candidatesBySlot.get(a)!.length - candidatesBySlot.get(b)!.length);
 
   const leafCap = Math.max(prefs.maxPlans, 1) * LEAF_FACTOR;

@@ -11,6 +11,8 @@ node_modules/**
 .vscode/**
 .gitignore
 .pinconfig.json
+OVERVIEW.md
+resources/icon.svg
 package-lock.json
 tsconfig.json
 **/*.ts

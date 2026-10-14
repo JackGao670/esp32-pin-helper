@@ -4,8 +4,12 @@
   "description": "Visual ESP32 pin planning without changing application source code.",
   "version": "0.0.3",
   "publisher": "local-development",
+  "license": "MIT",
+  "icon": "resources/icon.png",
+  "keywords": ["esp32", "esp-idf", "pinout", "gpio", "hardware", "embedded", "peripheral", "camera", "lcd", "i2c", "spi", "uart"],
   "engines": { "vscode": "^1.90.0" },
   "categories": ["Other"],
+  "galleryBanner": { "color": "#12308f", "theme": "dark" },
   "main": "./dist/extension.js",
   "activationEvents": ["onCommand:espPinPlanner.open", "onCommand:espPinPlanner.validate", "onCommand:espPinPlanner.create", "onCommand:espPinPlanner.selectTarget", "onView:espPinPlanner.home", "workspaceContains:**/.pinconfig.json", "onLanguage:json"],
   "contributes": {

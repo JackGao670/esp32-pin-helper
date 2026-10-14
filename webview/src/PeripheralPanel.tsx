@@ -8,7 +8,7 @@ import { CAMERA_PRESETS, LCD_PRESETS, presetOwnerInstance } from "./presets";
 import type { PeripheralSignalPreset } from "./presets";
 
 export function PeripheralPanel() {
-  const { state, send, pending, select, setCandidates } = usePlanner();
+  const { state, send, pending, select, setCandidates, selected } = usePlanner();
   const chip = state.config.target.chip;
   const peripherals = getPeripherals(chip);
   const [type, setType] = useState("uart");
@@ -17,6 +17,9 @@ export function PeripheralPanel() {
   const [avoidStrapping, setAvoidStrapping] = useState(true);
   const [plans, setPlans] = useState<AssignmentPlan[] | null>(null);
   const [planIndex, setPlanIndex] = useState(0);
+  // Per-signal review state: accepted pins (locked) and rejected pins (tried & dismissed).
+  const [pinned, setPinned] = useState<Record<string, number>>({});
+  const [blocked, setBlocked] = useState<Record<string, number[]>>({});
   const available = peripherals.find(item => item.type === type) ?? peripherals[0];
   const currentInstance = available.instances.includes(instance) ? instance : available.instances[0];
   const assignments = resolveAssignments(state.config);
@@ -86,13 +89,15 @@ export function PeripheralPanel() {
   const planGpios = (plan: AssignmentPlan): number[] =>
     Object.values(plan.peripherals).flatMap(peripheral => Object.values(peripheral.signals).map(ref => Number(ref.slice(4))));
 
-  function generatePlans() {
-    if (disabled) return;
+  // Re-solve with the given accepted pins / rejected pins and refresh the preview + highlight.
+  function solve(nextPinned: Record<string, number>, nextBlocked: Record<string, number[]>,
+                 nextAvoidStrapping = avoidStrapping) {
     const owner = `${available.type}${currentInstance}`;
     // Pins already assigned elsewhere are off-limits; the target owner's own routes are free to re-plan.
     const occupied = assignments.filter(item => item.owner !== owner).map(item => item.gpio);
     const result = recommendAssignment([{ type: available.type, instance: currentInstance }],
-      { avoidStrapping, maxPlans: 3 }, chip, { board: boardHints, occupied });
+      { avoidStrapping: nextAvoidStrapping, maxPlans: 3 }, chip,
+      { board: boardHints, occupied, pinned: nextPinned, blocked: nextBlocked });
     setPlans(result);
     setPlanIndex(0);
     if (result.length) {
@@ -104,6 +109,13 @@ export function PeripheralPanel() {
     }
   }
 
+  function generatePlans() {
+    if (disabled) return;
+    setPinned({});
+    setBlocked({});
+    solve({}, {});
+  }
+
   function previewPlan(index: number) {
     setPlanIndex(index);
     if (plans?.[index]) setCandidates(planGpios(plans[index]));
@@ -111,7 +123,23 @@ export function PeripheralPanel() {
 
   function dismissPlans() {
     setPlans(null);
+    setPinned({});
+    setBlocked({});
     setCandidates([]);
+  }
+
+  // Accept: lock this signal to its previewed pin, then re-route the remaining signals around it.
+  function acceptSignal(key: string, gpio: number) {
+    const next = { ...pinned, [key]: gpio };
+    setPinned(next);
+    solve(next, blocked);
+  }
+
+  // Replace: forbid the previewed pin for this signal only, then look for an alternative.
+  function replaceSignal(key: string, gpio: number) {
+    const next = { ...blocked, [key]: [...(blocked[key] ?? []), gpio] };
+    setBlocked(next);
+    solve(pinned, next);
   }
 
   function applyPlan() {
@@ -193,13 +221,17 @@ export function PeripheralPanel() {
     <h3>Add Peripheral</h3>
     <label htmlFor="peripheral-type">Type</label>
     <select id="peripheral-type" value={type} onChange={event => {
+      dismissPlans();
       setType(event.target.value);
       setInstance(peripherals.find(item => item.type === event.target.value)!.instances[0]);
     }}>
       {peripherals.map(item => <option key={item.type} value={item.type}>{item.type.toUpperCase()}</option>)}
     </select>
     <label htmlFor="peripheral-instance">Instance</label>
-    <select id="peripheral-instance" value={currentInstance} onChange={event => setInstance(Number(event.target.value))}>
+    <select id="peripheral-instance" value={currentInstance} onChange={event => {
+      dismissPlans();
+      setInstance(Number(event.target.value));
+    }}>
       {available.instances.map(item => <option key={item} value={item}>{item}</option>)}
     </select>
     <label className="checkbox" htmlFor="auto-assign">
@@ -207,7 +239,11 @@ export function PeripheralPanel() {
       Auto-assign pins
     </label>
     {autoAssign && <label className="checkbox" htmlFor="avoid-strapping">
-      <input id="avoid-strapping" type="checkbox" checked={avoidStrapping} onChange={event => setAvoidStrapping(event.target.checked)} />
+      <input id="avoid-strapping" type="checkbox" checked={avoidStrapping} onChange={event => {
+        const value = event.target.checked;
+        setAvoidStrapping(value);
+        if (plans) solve(pinned, blocked, value);
+      }} />
       Avoid strapping / boot pins
     </label>}
     <button className="secondary add-peripheral" disabled={disabled} onClick={() =>
@@ -215,7 +251,7 @@ export function PeripheralPanel() {
         : send({ type: "addPeripheral", peripheral: available.type, instance: currentInstance, revision: state.revision })}>
       {autoAssign ? `Recommend pins for ${available.type.toUpperCase()}${currentInstance}` : `Add ${available.type.toUpperCase()}${currentInstance}`}</button>
     {plans && <section className="plan-preview">
-      <div className="section-heading"><strong>Auto-assign · {plans.length} plan{plans.length === 1 ? "" : "s"}</strong>
+      <div className="section-heading"><strong>{`Auto-assign · ${plans.length} plan${plans.length === 1 ? "" : "s"}`}</strong>
         <button className="secondary" onClick={dismissPlans}>Dismiss</button></div>
       {plans.length === 0
         ? <p className="restriction">No viable auto-assignment for {available.type.toUpperCase()}{currentInstance} on {chip.toUpperCase()} with the current pins. Add it manually to inspect the routes.</p>
@@ -223,10 +259,23 @@ export function PeripheralPanel() {
           {plans.length > 1 && <div className="plan-tabs">{plans.map((plan, index) =>
             <button key={index} className={`secondary ${index === planIndex ? "active" : ""}`} onClick={() => previewPlan(index)}>
               #{index + 1} · {Math.round(plan.score)}</button>)}</div>}
+          {Object.keys(pinned).length > 0 && <p className="restriction">Accepted signals are locked to their pin; Replace tries another pin for one signal.</p>}
           <ul className="plan-signals">{Object.entries(plans[planIndex].peripherals).flatMap(([owner, peripheral]) =>
-            Object.entries(peripheral.signals).map(([signal, ref]) =>
-              <li key={`${owner}-${signal}`}><span>{owner}.{signal.toUpperCase()}</span>
-                <code role="button" title="Select this pin" onClick={() => select(Number(ref.slice(4)))}>{ref}</code></li>))}
+            Object.entries(peripheral.signals).map(([signal, ref]) => {
+              const key = `${owner}.${signal}`;
+              const gpio = Number(ref.slice(4));
+              return <li key={key} className={gpio === selected ? "active" : ""}>
+                <span className="plan-signal-name">{owner}.{signal.toUpperCase()}
+                  {pinned[key] !== undefined && <em className="locked">locked</em>}</span>
+                <code role="button" title="Select this pin" onClick={() => select(gpio)}>{ref}</code>
+                <span className="plan-actions">
+                  <button className="secondary" title="Lock this pin and re-route the other signals"
+                    onClick={() => acceptSignal(key, gpio)}>Accept</button>
+                  <button className="secondary" title="Try a different pin for this signal"
+                    onClick={() => replaceSignal(key, gpio)}>Replace</button>
+                </span>
+              </li>;
+            }))}
           </ul>
           {plans[planIndex].warnings.length > 0 && <ul className="plan-warnings">
             {plans[planIndex].warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>}
