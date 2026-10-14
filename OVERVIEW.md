@@ -228,3 +228,7 @@ edit can never be clobbered. File watchers on `.pinconfig.json` and `sdkconfig` 
   budget under 500 ms.
 - **Browser preview**: `npm run dev:webview` serves the WebView standalone at `127.0.0.1:5173` for UI
   work without launching VS Code.
+- **CI**: [.github/workflows/ci.yml](file:///d:/workspace/esp-pin-planer/esp32-pin-helper/.github/workflows/ci.yml)
+  runs the same `npm test` + `npm run build` on every push / PR to `main` and uploads the packaged VSIX
+  as an artifact; pushing a `v*` tag additionally attaches it to the GitHub release. The database pack
+  will get its own workflow once it is split out (§6.2 task 4.2).

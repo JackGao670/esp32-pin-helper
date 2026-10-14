@@ -9,6 +9,7 @@ boards/**
 devices/**
 node_modules/**
 .vscode/**
+.github/**
 .gitignore
 .pinconfig.json
 OVERVIEW.md

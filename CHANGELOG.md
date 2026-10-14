@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **CI pipeline** (`.github/workflows/ci.yml`): on every push / PR to `main` it installs, runs the unit
+  tests, builds (type-check + esbuild + vite) and packages the VSIX as a build artifact; a `v*` tag also
+  attaches that VSIX to the GitHub release.
 - **AI assistant** (`@espPinPlanner` chat participant, `/generate` and `/fix` commands): describe the
   peripherals you want and get a validated `.pinconfig.json`.
 - **"Ask AI to fix"** — a Problems quick fix (and `espPinPlanner.fixWithAi` command) that asks the model
