@@ -2,20 +2,30 @@ import { useMemo, useState } from "react";
 import { usePlanner } from "./store";
 import { getPeripherals, candidates, definition } from "../../src/core/resolver/peripherals";
 import { resolveAssignments } from "../../src/core/model/peripherals";
+import { recommendAssignment, type AssignmentPlan, type BoardHints } from "../../src/core/optimizer/assign";
 import { boardShortcutsFor, type BoardShortcut } from "./boardDefaults";
 import { CAMERA_PRESETS, LCD_PRESETS, presetOwnerInstance } from "./presets";
 import type { PeripheralSignalPreset } from "./presets";
 
 export function PeripheralPanel() {
-  const { state, send, pending, select } = usePlanner();
+  const { state, send, pending, select, setCandidates } = usePlanner();
   const chip = state.config.target.chip;
   const peripherals = getPeripherals(chip);
   const [type, setType] = useState("uart");
   const [instance, setInstance] = useState(0);
+  const [autoAssign, setAutoAssign] = useState(true);
+  const [avoidStrapping, setAvoidStrapping] = useState(true);
+  const [plans, setPlans] = useState<AssignmentPlan[] | null>(null);
+  const [planIndex, setPlanIndex] = useState(0);
   const available = peripherals.find(item => item.type === type) ?? peripherals[0];
   const currentInstance = available.instances.includes(instance) ? instance : available.instances[0];
   const assignments = resolveAssignments(state.config);
   const disabled = !state.writable || pending;
+  // Board hints for the optimizer; BoardInfo is shape-compatible with BoardHints.
+  const boardHints: BoardHints | undefined = state.board && {
+    name: state.board.name, reservedGpios: state.board.reservedGpios,
+    defaultRoutes: state.board.defaultSignalMap, onboardPins: state.board.onboardPins
+  };
   const chipHasCamera = useMemo(() => peripherals.some(p => p.type === "camera" || p.type === "camera_mipi"), [peripherals]);
   const chipHasLcd    = useMemo(() => peripherals.some(p => p.type === "lcd"    || p.type === "lcd_mipi"),    [peripherals]);
   const cameraPresetsForChip = CAMERA_PRESETS.filter(p => p.targetChips.includes(chip as any));
@@ -70,6 +80,56 @@ export function PeripheralPanel() {
       select(gpio);
       send({ type: "setSignal", owner: shortcut.owner, signal: signalId, gpio, revision });
     }
+  }
+
+  // ---- Phase 3 auto-assignment wizard (§3.3/§3.4) ----
+  const planGpios = (plan: AssignmentPlan): number[] =>
+    Object.values(plan.peripherals).flatMap(peripheral => Object.values(peripheral.signals).map(ref => Number(ref.slice(4))));
+
+  function generatePlans() {
+    if (disabled) return;
+    const owner = `${available.type}${currentInstance}`;
+    // Pins already assigned elsewhere are off-limits; the target owner's own routes are free to re-plan.
+    const occupied = assignments.filter(item => item.owner !== owner).map(item => item.gpio);
+    const result = recommendAssignment([{ type: available.type, instance: currentInstance }],
+      { avoidStrapping, maxPlans: 3 }, chip, { board: boardHints, occupied });
+    setPlans(result);
+    setPlanIndex(0);
+    if (result.length) {
+      setCandidates(planGpios(result[0]));
+      const first = planGpios(result[0])[0];
+      if (first !== undefined) select(first);
+    } else {
+      setCandidates([]);
+    }
+  }
+
+  function previewPlan(index: number) {
+    setPlanIndex(index);
+    if (plans?.[index]) setCandidates(planGpios(plans[index]));
+  }
+
+  function dismissPlans() {
+    setPlans(null);
+    setCandidates([]);
+  }
+
+  function applyPlan() {
+    if (disabled || !plans?.[planIndex]) return;
+    const revision = state.revision;
+    const plan = plans[planIndex];
+    for (const [owner, peripheral] of Object.entries(plan.peripherals)) {
+      const exists = state.config.peripherals?.[owner]?.type === peripheral.type
+        && state.config.peripherals?.[owner]?.instance === peripheral.instance;
+      if (!exists) send({ type: "addPeripheral", peripheral: peripheral.type, instance: peripheral.instance, revision });
+      for (const [signal, ref] of Object.entries(peripheral.signals)) {
+        const gpio = Number(ref.slice(4));
+        if (Number.isFinite(gpio)) send({ type: "setSignal", owner, signal, gpio, revision });
+      }
+    }
+    dismissPlans();
+    const first = planGpios(plan)[0];
+    if (first !== undefined) select(first);
   }
 
   return <div className="peripheral-panel">
@@ -142,8 +202,37 @@ export function PeripheralPanel() {
     <select id="peripheral-instance" value={currentInstance} onChange={event => setInstance(Number(event.target.value))}>
       {available.instances.map(item => <option key={item} value={item}>{item}</option>)}
     </select>
+    <label className="checkbox" htmlFor="auto-assign">
+      <input id="auto-assign" type="checkbox" checked={autoAssign} onChange={event => setAutoAssign(event.target.checked)} />
+      Auto-assign pins
+    </label>
+    {autoAssign && <label className="checkbox" htmlFor="avoid-strapping">
+      <input id="avoid-strapping" type="checkbox" checked={avoidStrapping} onChange={event => setAvoidStrapping(event.target.checked)} />
+      Avoid strapping / boot pins
+    </label>}
     <button className="secondary add-peripheral" disabled={disabled} onClick={() =>
-      send({ type: "addPeripheral", peripheral: available.type, instance: currentInstance, revision: state.revision })}>Add {available.type.toUpperCase()}{currentInstance}</button>
+      autoAssign ? generatePlans()
+        : send({ type: "addPeripheral", peripheral: available.type, instance: currentInstance, revision: state.revision })}>
+      {autoAssign ? `Recommend pins for ${available.type.toUpperCase()}${currentInstance}` : `Add ${available.type.toUpperCase()}${currentInstance}`}</button>
+    {plans && <section className="plan-preview">
+      <div className="section-heading"><strong>Auto-assign · {plans.length} plan{plans.length === 1 ? "" : "s"}</strong>
+        <button className="secondary" onClick={dismissPlans}>Dismiss</button></div>
+      {plans.length === 0
+        ? <p className="restriction">No viable auto-assignment for {available.type.toUpperCase()}{currentInstance} on {chip.toUpperCase()} with the current pins. Add it manually to inspect the routes.</p>
+        : <>
+          {plans.length > 1 && <div className="plan-tabs">{plans.map((plan, index) =>
+            <button key={index} className={`secondary ${index === planIndex ? "active" : ""}`} onClick={() => previewPlan(index)}>
+              #{index + 1} · {Math.round(plan.score)}</button>)}</div>}
+          <ul className="plan-signals">{Object.entries(plans[planIndex].peripherals).flatMap(([owner, peripheral]) =>
+            Object.entries(peripheral.signals).map(([signal, ref]) =>
+              <li key={`${owner}-${signal}`}><span>{owner}.{signal.toUpperCase()}</span>
+                <code role="button" title="Select this pin" onClick={() => select(Number(ref.slice(4)))}>{ref}</code></li>))}
+          </ul>
+          {plans[planIndex].warnings.length > 0 && <ul className="plan-warnings">
+            {plans[planIndex].warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>}
+          <button className="secondary add-peripheral" disabled={disabled} onClick={applyPlan}>Apply plan #{planIndex + 1}</button>
+        </>}
+    </section>}
     {Object.entries(state.config.peripherals ?? {}).map(([owner, peripheral]) => {
       const spec = definition(peripheral.type, peripheral.instance, state.config.target.chip);
       return <section className="peripheral-card" key={owner}>

@@ -14,7 +14,10 @@ interface Store {
   state: PlannerState;
   selected: number;
   pending: boolean;
+  // GPIOs of the currently previewed auto-assign plan, highlighted in the pinout (§3.4).
+  candidates: number[];
   select: (gpio: number) => void;
+  setCandidates: (gpios: number[]) => void;
   send: (message: ClientMessage) => void;
 }
 
@@ -39,7 +42,9 @@ export const usePlanner = create<Store>((set, get) => ({
   state: makeInitialState(),
   selected: 0,
   pending: Boolean(vscode),
+  candidates: [],
   select: selected => set({ selected }),
+  setCandidates: gpios => set({ candidates: gpios }),
   send: message => {
     if (vscode) {
       if (!["ready", "openJson"].includes(message.type)) set({ pending: true });
@@ -74,7 +79,7 @@ export const usePlanner = create<Store>((set, get) => ({
 
 window.addEventListener("message", event => {
   const message = event.data as HostMessage;
-  if (message?.type === "state") usePlanner.setState({ state: message.state, pending: false,
+  if (message?.type === "state") usePlanner.setState({ state: message.state, pending: false, candidates: [],
     selected: getDevice(message.state.config.target.chip)?.pins.some(pin => pin.gpio === usePlanner.getState().selected) ? usePlanner.getState().selected : 0 });
   if (message?.type === "focus") usePlanner.setState({ selected: message.gpio });
 });

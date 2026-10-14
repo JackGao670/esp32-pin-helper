@@ -56,6 +56,8 @@ aside { padding: 24px 20px; background: var(--panel); }
 .pin.selected { outline: 1px solid var(--accent); border-color: var(--accent); }
 .pin.error { border-color: #ee737b; }
 .pin.warning { border-color: #8e743c; }
+.pin.candidate { border-style: dashed; border-color: var(--accent); }
+.pin.candidate small { color: var(--accent); }
 .pin.reserved {
   background: repeating-linear-gradient(45deg, #1b2430, #1b2430 6px, #2a231a 6px, #2a231a 12px);
   border-color: #655133;
@@ -64,6 +66,7 @@ aside { padding: 24px 20px; background: var(--panel); }
 .pin.reserved small { color: #d9b47c; }
 .pin.onboard { border-color: #3f6b86; background: linear-gradient(90deg, #16242e, var(--panel) 45%); }
 .legend .onboard .dot { background: #5aa9d6; }
+.legend .candidate .dot { background: var(--accent); }
 .pin.onboard small { color: #7fb8d8; }
 .chip { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--panel); text-align: center; }
 .chip > span:not(.chip-mark) { font-size: 9px; letter-spacing: .14em; color: var(--muted); }
@@ -89,7 +92,20 @@ dt { color: var(--muted); } dd { margin: 0; }
 .problem span { font-size: 11px; }
 .workspace { grid-template-columns: 250px minmax(440px, 1fr) 260px; }
 .peripheral-panel label { margin-top: 12px; font-size: 11px; }
+.peripheral-panel .checkbox { display: flex; align-items: center; gap: 6px; margin-top: 10px; }
+.peripheral-panel .checkbox input { width: auto; margin: 0; }
 .add-peripheral { width: 100%; margin-top: 12px; }
+.plan-preview { border-top: 1px solid var(--border); margin-top: 14px; padding-top: 14px; }
+.plan-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.plan-tabs .secondary { font-size: 10px; padding: 4px 8px; }
+.plan-tabs .secondary.active { border-color: var(--accent); color: var(--accent); }
+.plan-signals { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 4px; }
+.plan-signals li { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; }
+.plan-signals li > span { color: var(--muted); overflow-wrap: anywhere; }
+.plan-signals code { cursor: pointer; }
+.plan-signals code:hover { color: var(--accent); }
+.plan-warnings { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 3px; }
+.plan-warnings li { font-size: 10px; color: #e3b75a; line-height: 1.5; padding-left: 8px; border-left: 2px solid #8e743c; }
 .peripheral-card { border-top: 1px solid var(--border); padding-top: 18px; margin-top: 20px; }
 .peripheral-card .section-heading { gap: 6px; }
 .peripheral-card .secondary { font-size: 10px; padding: 5px 7px; }

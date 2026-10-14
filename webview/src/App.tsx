@@ -8,7 +8,7 @@ import { PeripheralPanel } from "./PeripheralPanel";
 import { resolveAssignments } from "../../src/core/model/peripherals";
 
 function App() {
-  const { state, selected, select, send, pending } = usePlanner();
+  const { state, selected, select, send, pending, candidates } = usePlanner();
   const supported = getDevice(state.config.target.chip);
   const device = supported ?? defaultDevice;
   const pin = device.pins.find(pin => pin.gpio === selected)!;
@@ -25,18 +25,21 @@ function App() {
   const labelOf = (gpio: number): string => state.board?.labelMap[String(gpio)] ?? `GPIO${gpio}`;
   const reservedSet = new Set(state.board?.reservedGpios ?? []);
   const onboardMap = new Map((state.board?.onboardPins ?? []).map(pin => [pin.gpio, pin.usage]));
+  const candidateSet = new Set(candidates);
   const pinButton = (gpio: number) => {
     const fn = allAssignments.find(p => p.gpio === gpio)?.function;
     const boardReserved = reservedSet.has(gpio);
     // Reserved takes precedence: it is a hard "do not reuse" pin, so it never doubles as an onboard badge.
     const onboardUsage = boardReserved ? undefined : onboardMap.get(gpio);
-    return <button key={gpio} className={`pin ${status(gpio)} ${selected === gpio ? "selected" : ""} ${boardReserved ? "reserved" : ""} ${onboardUsage ? "onboard" : ""}`}
+    const recommended = candidateSet.has(gpio);
+    return <button key={gpio} className={`pin ${status(gpio)} ${selected === gpio ? "selected" : ""} ${boardReserved ? "reserved" : ""} ${onboardUsage ? "onboard" : ""} ${recommended ? "candidate" : ""}`}
       aria-pressed={selected === gpio} onClick={() => select(gpio)}
       title={boardReserved ? `${labelOf(gpio)} — reserved on ${state.board?.name}`
         : onboardUsage ? `${labelOf(gpio)} — wired to ${onboardUsage} on ${state.board?.name}`
+        : recommended ? `${labelOf(gpio)} — recommended by auto-assign`
         : labelOf(gpio)}>
       <span className="dot" /><strong>{labelOf(gpio)}</strong>
-      <small>{fn?.replace("GPIO_", "") ?? (boardReserved ? "Reserved" : onboardUsage ? "Onboard" : "Unassigned")}</small>
+      <small>{fn?.replace("GPIO_", "") ?? (boardReserved ? "Reserved" : onboardUsage ? "Onboard" : recommended ? "Candidate" : "Unassigned")}</small>
     </button>;
   };
   const targetSelector = <><label htmlFor="target-chip">Target Chip</label>
@@ -77,7 +80,8 @@ function App() {
         <div className="legend">{["unused", "assigned", "warning", "error", "selected"].map(s =>
           <span key={s} className={s}><i className="dot" />{s}</span>)}
           {state.board?.reservedGpios?.length && <span className="reserved"><i className="dot" />reserved</span>}
-          {onboardMap.size > 0 && <span className="onboard"><i className="dot" />onboard</span>}</div>
+          {onboardMap.size > 0 && <span className="onboard"><i className="dot" />onboard</span>}
+          {candidateSet.size > 0 && <span className="candidate"><i className="dot" />candidate</span>}</div>
         <div className="pinout">
           <div className="pin-column">{device.pins.slice(0, Math.ceil(device.pins.length / 2)).map(p => pinButton(p.gpio))}</div>
           <div className="chip"><span className="chip-mark" /><span>ESPRESSIF</span><strong>{device.name}</strong><small>GPIO Matrix</small></div>
