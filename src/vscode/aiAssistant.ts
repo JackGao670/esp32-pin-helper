@@ -375,7 +375,7 @@ export class AiAssistant implements vscode.Disposable {
   // ── helpers ───────────────────────────────────────────────────────────────
 
   private boardHints(chip: string, settings: PlannerSettings): BoardHints | undefined {
-    if (chip !== "esp32s3" && chip !== "esp32c6" && chip !== "esp32p4" && chip !== "esp32c3" && chip !== "esp32c2" && chip !== "esp32" && chip !== "esp32s2") return undefined;
+    if (chip !== "esp32s3" && chip !== "esp32c6" && chip !== "esp32p4" && chip !== "esp32c3" && chip !== "esp32c2" && chip !== "esp32" && chip !== "esp32s2" && chip !== "esp32c5" && chip !== "esp32h2") return undefined;
     try {
       const board = resolveBoardFromSettings(settings.board, chip);
       return board ? boardHintsFromProfile(board) : undefined;

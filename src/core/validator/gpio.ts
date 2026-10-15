@@ -350,8 +350,8 @@ const memoryModeRule: ValidationRule = { id: "memoryMode", check(config, _ctx) {
 } };
 
 const rmtDirectionRule: ValidationRule = { id: "rmtDirection", check(config, ctx) {
-  const txOnly: Record<string, number[]> = { esp32s3: [0, 1, 2, 3], esp32c6: [0, 1], esp32c3: [0, 1] };
-  const rxOnly: Record<string, number[]> = { esp32s3: [4, 5, 6, 7], esp32c6: [2, 3], esp32c3: [2, 3] };
+  const txOnly: Record<string, number[]> = { esp32s3: [0, 1, 2, 3], esp32c6: [0, 1], esp32c3: [0, 1], esp32c5: [0, 1], esp32h2: [0, 1] };
+  const rxOnly: Record<string, number[]> = { esp32s3: [4, 5, 6, 7], esp32c6: [2, 3], esp32c3: [2, 3], esp32c5: [2, 3], esp32h2: [2, 3] };
   const chip = config.target.chip;
   const tx = new Set(txOnly[chip] ?? []);
   const rx = new Set(rxOnly[chip] ?? []);
@@ -441,7 +441,7 @@ export function validateGpio(config: PinConfigDocument,
   const chip = config.target.chip as Parameters<typeof resolveBoardFromSettings>[1];
   const board = resolveBoardFromSettings(settings.board,
     // resolveBoardFromSettings expects TargetChip; keep string union guard to not break odd imported docs
-    (chip === "esp32s3" || chip === "esp32c6" || chip === "esp32p4" || chip === "esp32c3" || chip === "esp32c2" || chip === "esp32" || chip === "esp32s2" ? chip : DEFAULT_SETTINGS.defaultTarget));
+    (chip === "esp32s3" || chip === "esp32c6" || chip === "esp32p4" || chip === "esp32c3" || chip === "esp32c2" || chip === "esp32" || chip === "esp32s2" || chip === "esp32c5" || chip === "esp32h2" ? chip : DEFAULT_SETTINGS.defaultTarget));
   const ctx: ValidationContext = { settings, board };
   return rules.flatMap(rule => rule.check(config, ctx));
 }

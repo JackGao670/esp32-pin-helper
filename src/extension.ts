@@ -209,7 +209,7 @@ export function activate(context: vscode.ExtensionContext): void {
       try {
         const s = readExtensionSettings();
         const chip = state.config.target.chip;
-        const valid = chip === "esp32s3" || chip === "esp32c6" || chip === "esp32p4" || chip === "esp32c3" || chip === "esp32c2" || chip === "esp32" || chip === "esp32s2" ? chip : "esp32s3";
+        const valid = chip === "esp32s3" || chip === "esp32c6" || chip === "esp32p4" || chip === "esp32c3" || chip === "esp32c2" || chip === "esp32" || chip === "esp32s2" || chip === "esp32c5" || chip === "esp32h2" ? chip : "esp32s3";
         const b = resolveBoardFromSettings(s.board, valid);
         return b ? boardInfoOf(b) : undefined;
       } catch {

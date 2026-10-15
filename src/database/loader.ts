@@ -5,6 +5,8 @@ import c3 from "esp-device-pack/devices/esp32c3/esp32c3.json";
 import c2 from "esp-device-pack/devices/esp32c2/esp32c2.json";
 import esp32 from "esp-device-pack/devices/esp32/esp32.json";
 import s2 from "esp-device-pack/devices/esp32s2/esp32s2.json";
+import c5 from "esp-device-pack/devices/esp32c5/esp32c5.json";
+import h2 from "esp-device-pack/devices/esp32h2/esp32h2.json";
 import { assertPackCompatible } from "./pack";
 
 export interface PinDefinition {
@@ -80,7 +82,7 @@ function loadDevice(raw: unknown) {
 
 // Fail fast if the installed esp-device-pack speaks a newer manifest shape than this build.
 assertPackCompatible();
-export const devices = [loadDevice(data), loadDevice(c6), loadDevice(p4), loadDevice(c3), loadDevice(c2), loadDevice(esp32), loadDevice(s2)];
+export const devices = [loadDevice(data), loadDevice(c6), loadDevice(p4), loadDevice(c3), loadDevice(c2), loadDevice(esp32), loadDevice(s2), loadDevice(c5), loadDevice(h2)];
 export const device = devices[0];
 export function getDevice(chip: string) {
   return devices.find(device => device.id === chip);

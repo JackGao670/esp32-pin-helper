@@ -16,7 +16,7 @@ test("C6 GPIO capabilities and restrictions match official summary", () => {
   assert.ok(device.pins[15].restrictions.some(text => /Strapping/.test(text)));
   assert.ok(device.pins[12].restrictions.some(text => /JTAG/.test(text)));
   assert.ok(device.pins[14].restrictions.some(text => /bonded/.test(text)));
-  assert.equal(getDevice("esp32c5"), undefined);
+  assert.equal(getDevice("esp32s4"), undefined);
 });
 
 test("ordinary C6 controller instances do not inherit S3 resources", () => {
@@ -61,7 +61,7 @@ test("C6 peripheral assignments validate and switching preserves non-chip metada
   assert.equal(changed.target.chip, "esp32c6");
   assert.equal(changed.target.package, undefined);
   assert.deepEqual(changed.vendor, empty.vendor);
-  assert.throws(() => selectTarget(empty, "esp32c5"), /Unsupported/);
+  assert.throws(() => selectTarget(empty, "esp32s4"), /Unsupported/);
 });
 
 test("P4 GPIO capabilities, boot and USB pins do not inherit C6 or S3 restrictions", () => {
@@ -359,4 +359,131 @@ test("ESP32 and ESP32-S2 controller instances are chip-specific and do not leak 
   assert.deepEqual(candidates(dn, "esp32s2"), [19]);
   assert.deepEqual(candidates(dp, "esp32s2"), [20]);
   assert.deepEqual(candidates(definition("uart", 0, "esp32s2")!.signals[0], "esp32s2").length, 42);
+});
+
+test("C5 GPIO capabilities, strapping, memory and USB Serial/JTAG pins match the official summary", () => {
+  const device = getDevice("esp32c5")!;
+  // 29 GPIOs 0-28 with no gap; every pad is output-capable (no input-only pin on the C5).
+  assert.equal(device.pins.length, 29);
+  assert.deepEqual(device.pins.map(pin => pin.gpio), Array.from({ length: 29 }, (_, i) => i));
+  assert.deepEqual(device.pins.filter(pin => pin.capabilities.output === false).map(pin => pin.gpio), []);
+  assert.equal(device.pins.some(pin => /Input-only/.test(pin.restrictions.join(" "))), false);
+  // ADC1 pads are GPIO1-6; GPIO0/GPIO7 are digital-only.
+  assert.equal(device.pins[0].capabilities.analog, false);
+  assert.equal(device.pins[1].capabilities.analog, true);
+  assert.equal(device.pins[6].capabilities.analog, true);
+  assert.equal(device.pins[7].capabilities.analog, false);
+  // The RTC domain covers GPIO0-7.
+  assert.equal(device.pins[7].capabilities.rtc, true);
+  assert.equal(device.pins[8].capabilities.rtc, false);
+  assert.deepEqual(device.pins.filter(pin => pin.restrictions.some(text => /Strapping/.test(text))).map(pin => pin.gpio), [2, 7, 27, 28]);
+  assert.deepEqual(device.pins.filter(pin => pin.restrictions.some(text => /Flash\/PSRAM/.test(text))).map(pin => pin.gpio), [16, 17, 18, 19, 20, 21, 22]);
+  // The USB Serial/JTAG PHY is fixed to GPIO13 (D-) / GPIO14 (D+); the C5 has no USB OTG.
+  assert.deepEqual(device.pins.filter(pin => pin.restrictions.some(text => /USB Serial\/JTAG/.test(text))).map(pin => pin.gpio), [13, 14]);
+  assert.equal(device.pins.some(pin => /USB OTG/.test(pin.restrictions.join(" "))), false);
+  assert.deepEqual(device.adcUnits, { "1": [1, 2, 3, 4, 5, 6] });
+});
+
+test("C5 controller instances are chip-specific and do not leak other chips' resources", () => {
+  // C5: UART 0-1, I2C 0 only, SPI 2 only, LEDC 0-5, ADC1 only, RMT 0-3, I2S 0, USB 0; no TWAI/SD host/LCD_CAM.
+  assert.ok(definition("uart", 1, "esp32c5"));
+  assert.equal(definition("uart", 2, "esp32c5"), undefined);
+  assert.ok(definition("i2c", 0, "esp32c5"));
+  assert.equal(definition("i2c", 1, "esp32c5"), undefined);
+  assert.ok(definition("spi", 2, "esp32c5"));
+  assert.equal(definition("spi", 3, "esp32c5"), undefined);
+  assert.ok(definition("ledc", 5, "esp32c5"));
+  assert.equal(definition("ledc", 6, "esp32c5"), undefined);
+  assert.ok(definition("adc", 1, "esp32c5"));
+  assert.equal(definition("adc", 2, "esp32c5"), undefined);
+  assert.ok(definition("rmt", 3, "esp32c5"));
+  assert.equal(definition("rmt", 4, "esp32c5"), undefined);
+  assert.ok(definition("i2s", 0, "esp32c5"));
+  assert.equal(definition("i2s", 1, "esp32c5"), undefined);
+  assert.ok(definition("usb", 0, "esp32c5"));
+  // TWAI is not enableable in ESP-IDF v5.4 for the C5, so it is not modelled.
+  assert.equal(definition("twai", 0, "esp32c5"), undefined);
+  assert.equal(definition("sdmmc", 0, "esp32c5"), undefined);
+  assert.equal(definition("camera", 0, "esp32c5"), undefined);
+  assert.equal(definition("lcd", 0, "esp32c5"), undefined);
+  // No input-only pads, so every GPIO is a valid matrix route.
+  assert.equal(candidates(definition("uart", 0, "esp32c5")!.signals[0], "esp32c5").length, 29);
+  const adc = definition("adc", 1, "esp32c5")!.signals[0];
+  assert.deepEqual(candidates(adc, "esp32c5", 1), [1, 2, 3, 4, 5, 6]);
+  // The USB Serial/JTAG signals are locked to their fixed PHY pads.
+  const dn = definition("usb", 0, "esp32c5")!.signals.find(signal => signal.id === "dn")!;
+  const dp = definition("usb", 0, "esp32c5")!.signals.find(signal => signal.id === "dp")!;
+  assert.deepEqual(candidates(dn, "esp32c5"), [13]);
+  assert.deepEqual(candidates(dp, "esp32c5"), [14]);
+  // A plausible UART1 route on free pins validates cleanly, and out-of-range GPIOs are errors.
+  let config = addPeripheral(createConfig("esp32c5"), "uart", 1);
+  config = setSignal(config, "uart1", "tx", 24);
+  config = setSignal(config, "uart1", "rx", 25);
+  assert.deepEqual(validateGpio(config), []);
+  config.pins.push({ gpio: 29, function: "GPIO_OUTPUT" });
+  assert.ok(validateGpio(config).some(problem => /ESP32-C5/.test(problem.message)));
+});
+
+test("H2 GPIO capabilities, strapping, SiP variant and USB Serial/JTAG pins match the official summary", () => {
+  const device = getDevice("esp32h2")!;
+  // 28 GPIOs 0-27 with no gap; every pad is output-capable (no input-only pin on the H2).
+  assert.equal(device.pins.length, 28);
+  assert.deepEqual(device.pins.map(pin => pin.gpio), Array.from({ length: 28 }, (_, i) => i));
+  assert.equal(device.pins.some(pin => /Input-only/.test(pin.restrictions.join(" "))), false);
+  // ADC1 pads are GPIO1-5; GPIO0/GPIO6 are digital-only.
+  assert.equal(device.pins[0].capabilities.analog, false);
+  assert.equal(device.pins[1].capabilities.analog, true);
+  assert.equal(device.pins[5].capabilities.analog, true);
+  assert.equal(device.pins[6].capabilities.analog, false);
+  // The RTC domain covers GPIO7-14.
+  assert.equal(device.pins[7].capabilities.rtc, true);
+  assert.equal(device.pins[14].capabilities.rtc, true);
+  assert.equal(device.pins[6].capabilities.rtc, false);
+  assert.equal(device.pins[15].capabilities.rtc, false);
+  assert.deepEqual(device.pins.filter(pin => pin.restrictions.some(text => /Strapping/.test(text))).map(pin => pin.gpio), [2, 3, 8, 9, 25]);
+  assert.deepEqual(device.pins.filter(pin => pin.restrictions.some(text => /Flash\/PSRAM/.test(text))).map(pin => pin.gpio), [15, 16, 17, 18, 19, 20, 21]);
+  // GPIO6-7 and GPIO15-21 are only bonded out on non-SiP parts.
+  assert.deepEqual(device.pins.filter(pin => pin.restrictions.some(text => /bonded/.test(text))).map(pin => pin.gpio), [6, 7, 15, 16, 17, 18, 19, 20, 21]);
+  // The USB Serial/JTAG PHY is fixed to GPIO26 (D-) / GPIO27 (D+); the H2 has no USB OTG.
+  assert.deepEqual(device.pins.filter(pin => pin.restrictions.some(text => /USB Serial\/JTAG/.test(text))).map(pin => pin.gpio), [26, 27]);
+  assert.equal(device.pins.some(pin => /USB OTG/.test(pin.restrictions.join(" "))), false);
+  assert.deepEqual(device.adcUnits, { "1": [1, 2, 3, 4, 5] });
+});
+
+test("H2 controller instances are chip-specific and include the single TWAI controller", () => {
+  // H2: UART 0-1, I2C 0-1, SPI 2 only, LEDC 0-5, ADC1 only, RMT 0-3, I2S 0, USB 0, TWAI 0; no SD host/LCD_CAM.
+  assert.ok(definition("uart", 1, "esp32h2"));
+  assert.equal(definition("uart", 2, "esp32h2"), undefined);
+  assert.ok(definition("i2c", 1, "esp32h2"));
+  assert.equal(definition("i2c", 2, "esp32h2"), undefined);
+  assert.ok(definition("spi", 2, "esp32h2"));
+  assert.equal(definition("spi", 3, "esp32h2"), undefined);
+  assert.ok(definition("ledc", 5, "esp32h2"));
+  assert.equal(definition("ledc", 6, "esp32h2"), undefined);
+  assert.ok(definition("adc", 1, "esp32h2"));
+  assert.equal(definition("adc", 2, "esp32h2"), undefined);
+  assert.ok(definition("rmt", 3, "esp32h2"));
+  assert.equal(definition("rmt", 4, "esp32h2"), undefined);
+  assert.ok(definition("i2s", 0, "esp32h2"));
+  assert.equal(definition("i2s", 1, "esp32h2"), undefined);
+  assert.ok(definition("usb", 0, "esp32h2"));
+  assert.ok(definition("twai", 0, "esp32h2"));
+  assert.equal(definition("twai", 1, "esp32h2"), undefined);
+  assert.equal(definition("sdmmc", 0, "esp32h2"), undefined);
+  assert.equal(definition("camera", 0, "esp32h2"), undefined);
+  assert.equal(definition("lcd", 0, "esp32h2"), undefined);
+  assert.equal(candidates(definition("uart", 0, "esp32h2")!.signals[0], "esp32h2").length, 28);
+  const adc = definition("adc", 1, "esp32h2")!.signals[0];
+  assert.deepEqual(candidates(adc, "esp32h2", 1), [1, 2, 3, 4, 5]);
+  const dn = definition("usb", 0, "esp32h2")!.signals.find(signal => signal.id === "dn")!;
+  const dp = definition("usb", 0, "esp32h2")!.signals.find(signal => signal.id === "dp")!;
+  assert.deepEqual(candidates(dn, "esp32h2"), [26]);
+  assert.deepEqual(candidates(dp, "esp32h2"), [27]);
+  // A plausible I2C1 route on free pins validates cleanly, and out-of-range GPIOs are errors.
+  let config = addPeripheral(createConfig("esp32h2"), "i2c", 1);
+  config = setSignal(config, "i2c1", "sda", 10);
+  config = setSignal(config, "i2c1", "scl", 11);
+  assert.deepEqual(validateGpio(config), []);
+  config.pins.push({ gpio: 28, function: "GPIO_OUTPUT" });
+  assert.ok(validateGpio(config).some(problem => /ESP32-H2/.test(problem.message)));
 });

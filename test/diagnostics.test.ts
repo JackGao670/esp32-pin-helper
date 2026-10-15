@@ -29,9 +29,9 @@ test("missing signal diagnostics fall back to their peripheral object", () => {
 });
 
 test("unsupported targets and malformed configuration never report hardware success", () => {
-  const text = serializeConfig({ ...createConfig(), target: { chip: "esp32c5" } });
+  const text = serializeConfig({ ...createConfig(), target: { chip: "esp32s4" } });
   const [problem] = diagnosticProblems(text);
-  assert.equal(text.slice(problem.offset, problem.offset + problem.length), '"esp32c5"');
+  assert.equal(text.slice(problem.offset, problem.offset + problem.length), '"esp32s4"');
   assert.match(problem.message, /not supported/);
   for (const invalid of ["{", "", '{"version":2}', '{"version":1,}', "// comment\n{}"]) {
     assert.ok(diagnosticProblems(invalid).some(problem => problem.severity === "error"));

@@ -70,12 +70,12 @@ test("home model: hardware violations and unsupported chips surface in the count
   // A chip without a device database degrades to a warning instead of failing the view.
   const unknown = buildHomeModel({
     folderName: "blink",
-    raw: serializeConfig(createConfig("esp32c5")),
+    raw: serializeConfig(createConfig("esp32s4")),
     settings: DEFAULT_SETTINGS
   });
   assert.equal(unknown.status, "ready");
   assert.equal(unknown.supported, false);
-  assert.equal(unknown.chipName, "esp32c5");
+  assert.equal(unknown.chipName, "esp32s4");
   assert.equal(unknown.warnings, 1);
   assert.equal(unknown.errors, 0);
   assert.match(render(unknown), /\(not supported\)/);

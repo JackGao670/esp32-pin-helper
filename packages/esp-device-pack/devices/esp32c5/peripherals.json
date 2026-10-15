@@ -1,0 +1,53 @@
+{
+  "databaseVersion": "0.1.0",
+  "chip": "esp32c5",
+  "sources": [
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32c5/api-reference/peripherals/uart.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32c5/api-reference/peripherals/i2c.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32c5/api-reference/peripherals/spi_master.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32c5/api-reference/peripherals/ledc.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32c5/api-reference/peripherals/adc_oneshot.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32c5/api-reference/peripherals/rmt.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32c5/api-reference/peripherals/i2s.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32c5/api-reference/peripherals/usb_serial_jtag.html"
+  ],
+  "scope": "Standard UART (2 HP controllers), HP I2C (1 controller), standard SPI master (GPSPI2 only; SPI0/SPI1 drive the flash/PSRAM and are not exposed), LEDC channels (6 channels, low-speed only), ADC1 (single 6-channel unit, no ADC2), RMT channels and I2S master only. LP controllers (LP UART / LP I2C) are excluded. usb0 models the fixed USB Serial/JTAG pads (D- = GPIO13, D+ = GPIO14); the D+/D- pair must be routed together. The ESP32-C5 has no USB OTG, no SDMMC host and no ADC2, and TWAI is not enableable in ESP-IDF v5.4, so none of those are modelled. RMT channels 0-1 are TX-only and 2-3 are RX-only.",
+  "peripherals": [
+    { "type": "uart", "instances": [0, 1], "signals": [
+      { "id": "tx", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "rx", "direction": "input", "routing": "gpio_matrix", "required": true },
+      { "id": "rts", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "cts", "direction": "input", "routing": "gpio_matrix", "required": false }
+    ] },
+    { "type": "i2c", "instances": [0], "signals": [
+      { "id": "sda", "direction": "bidirectional", "routing": "gpio_matrix", "required": true, "openDrain": true },
+      { "id": "scl", "direction": "bidirectional", "routing": "gpio_matrix", "required": true, "openDrain": true }
+    ] },
+    { "type": "spi", "instances": [2], "signals": [
+      { "id": "mosi", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "miso", "direction": "input", "routing": "gpio_matrix", "required": false },
+      { "id": "sclk", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "cs", "direction": "output", "routing": "gpio_matrix", "required": false }
+    ] },
+    { "type": "ledc", "instances": [0, 1, 2, 3, 4, 5], "signals": [
+      { "id": "out", "direction": "output", "routing": "gpio_matrix", "required": true }
+    ] },
+    { "type": "adc", "instances": [1], "signals": [
+      { "id": "in", "direction": "input", "routing": "analog", "required": true }
+    ] },
+    { "type": "rmt", "instances": [0, 1, 2, 3], "signals": [
+      { "id": "sig", "direction": "bidirectional", "routing": "gpio_matrix", "required": true }
+    ] },
+    { "type": "i2s", "instances": [0], "signals": [
+      { "id": "bclk", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "ws", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "dout", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "din", "direction": "input", "routing": "gpio_matrix", "required": false },
+      { "id": "mclk", "direction": "output", "routing": "gpio_matrix", "required": false }
+    ] },
+    { "type": "usb", "instances": [0], "signals": [
+      { "id": "dn", "direction": "bidirectional", "routing": "dedicated", "gpio": [13], "required": true, "description": "USB D- (USB Serial/JTAG PHY negative data line), fixed to GPIO13." },
+      { "id": "dp", "direction": "bidirectional", "routing": "dedicated", "gpio": [14], "required": true, "description": "USB D+ (USB Serial/JTAG PHY positive data line), fixed to GPIO14." }
+    ] }
+  ]
+}

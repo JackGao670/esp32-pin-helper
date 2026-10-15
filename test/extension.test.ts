@@ -234,7 +234,7 @@ test("extension message flow saves, reloads and protects external edits", async 
   await settle();
   assert.equal(ctx.last.current!.state.writable, false);
   assert.match(ctx.last.current!.state.notice, /Cannot read/);
-  ctx.disk.current = serializeConfig({ ...createConfig(), target: { chip: "esp32c5" } });
+  ctx.disk.current = serializeConfig({ ...createConfig(), target: { chip: "esp32s4" } });
   ctx.listeners.change();
   await settle();
   assert.equal(ctx.last.current!.state.writable, false);

@@ -87,6 +87,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The `TargetChip` union, the settings guard, the schema (`chip` enum plus per-chip owner/instance rules)
   and the AI chip detector were extended accordingly; RMT direction is intentionally not enforced on these
   two chips because every RMT channel can be configured as either TX or RX. No reference boards are added.
+- **ESP32-C5 / ESP32-H2 chip data** (§4.1): the database now covers **nine** chips. The **ESP32-C5**
+  contributes 29 GPIOs (0-28, no input-only pads), strapping GPIO2/7/27/28, RTC GPIO0-7, a single 6-channel
+  **ADC1** (GPIO1-6, no ADC2), flash/PSRAM on GPIO16-22, UART 0-1, I2C 0, SPI2, LEDC 0-5, RMT 0-3
+  (TX 0-1 / RX 2-3), I2S 0 and the fixed **USB Serial/JTAG** pads (D- = GPIO13, D+ = GPIO14); it has no USB
+  OTG, no SDMMC host and no enableable TWAI (ESP-IDF v5.4 leaves `SOC_TWAI_SUPPORTED` behind an open TODO),
+  and the LP-domain UART/I2C controllers are not modelled. The **ESP32-H2** contributes 28 GPIOs (0-27, no
+  input-only pads), strapping GPIO2/3/8/9/25, RTC GPIO7-14, a single 5-channel **ADC1** (GPIO1-5, no ADC2),
+  flash GPIO15-21 (GPIO6-7 and GPIO15-21 are only bonded out on non-SiP parts), UART 0-1, I2C 0-1, SPI2,
+  LEDC 0-5, RMT 0-3 (TX 0-1 / RX 2-3), I2S 0, a single **TWAI** controller and the fixed **USB Serial/JTAG**
+  pads (D- = GPIO26, D+ = GPIO27); it has no Wi-Fi, USB OTG or SDMMC host. The `TargetChip` union, the
+  settings guards, the schema (`chip` enum plus per-chip owner/instance rules), the RMT TX/RX bank rule and
+  the AI chip detector were extended accordingly. No reference boards are added.
 
 ### Fixed
 - **ESP32-P4 ADC units** (§4.1): the P4 database now models **two** ADC units — ADC1 on GPIO16-23 and

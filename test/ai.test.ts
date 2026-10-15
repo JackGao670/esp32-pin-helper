@@ -160,20 +160,26 @@ test("deriveRepairContext treats plain pins as occupied", () => {
 });
 
 test("prompt helpers describe the chip facts the model must respect", () => {
-  assert.deepEqual(supportedChips(), ["esp32s3", "esp32c6", "esp32p4", "esp32c3", "esp32c2", "esp32", "esp32s2"]);
+  assert.deepEqual(supportedChips(), ["esp32s3", "esp32c6", "esp32p4", "esp32c3", "esp32c2", "esp32", "esp32s2", "esp32c5", "esp32h2"]);
 
   const catalogue = buildCatalogue("esp32s3");
   const uart = catalogue.find(entry => entry.type === "uart")!;
   assert.deepEqual(uart.instances, [0, 1, 2]);
   assert.deepEqual(uart.required, ["tx", "rx"]);
   assert.ok(uart.optional.includes("rts"));
-  assert.deepEqual(buildCatalogue("esp32c5"), []);
+  // An unknown chip has no catalogue at all.
+  assert.deepEqual(buildCatalogue("esp32s4"), []);
+  // C5 exposes no TWAI controller; H2 exposes exactly one.
+  assert.equal(buildCatalogue("esp32c5").some(entry => entry.type === "twai"), false);
+  assert.deepEqual(buildCatalogue("esp32h2").find(entry => entry.type === "twai")?.instances, [0]);
 
   const avoid = pinsToAvoid("esp32s3");
   assert.deepEqual(avoid.strapping, [0, 3, 45, 46]);
   assert.ok(avoid.memory.includes(26));
   assert.deepEqual(avoid.usbJtag, [19, 20]);
-  assert.deepEqual(pinsToAvoid("esp32c5"), { strapping: [], memory: [], usbJtag: [] });
+  assert.deepEqual(pinsToAvoid("esp32c5").usbJtag, [13, 14]);
+  assert.deepEqual(pinsToAvoid("esp32h2").usbJtag, [26, 27]);
+  assert.deepEqual(pinsToAvoid("esp32s4"), { strapping: [], memory: [], usbJtag: [] });
 });
 
 test("detectChip reads the target from a natural-language request", () => {
@@ -184,6 +190,8 @@ test("detectChip reads the target from a natural-language request", () => {
   assert.equal(detectChip("use an ESP32-C2 module"), "esp32c2");
   assert.equal(detectChip("a classic ESP32 devkit"), "esp32");
   assert.equal(detectChip("use an ESP32-S2 board"), "esp32s2");
+  assert.equal(detectChip("use an ESP32-C5 with dual-band Wi-Fi"), "esp32c5");
+  assert.equal(detectChip("a Thread-only ESP32-H2 node"), "esp32h2");
   assert.equal(detectChip("configure a camera"), undefined);
   assert.equal(detectChip(""), undefined);
 });

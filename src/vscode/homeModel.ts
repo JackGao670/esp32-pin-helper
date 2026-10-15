@@ -35,7 +35,7 @@ export interface HomeModel {
 }
 
 function isTargetChip(value: string): value is TargetChip {
-  return value === "esp32s3" || value === "esp32c6" || value === "esp32p4" || value === "esp32c3" || value === "esp32c2" || value === "esp32" || value === "esp32s2";
+  return value === "esp32s3" || value === "esp32c6" || value === "esp32p4" || value === "esp32c3" || value === "esp32c2" || value === "esp32" || value === "esp32s2" || value === "esp32c5" || value === "esp32h2";
 }
 
 export function buildHomeModel(input: HomeInput): HomeModel {

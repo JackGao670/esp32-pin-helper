@@ -13,7 +13,7 @@ function loadBoard(raw: unknown): BoardProfile {
   if (!b.name || typeof b.name !== "string") throw new Error(`Invalid board ${b.id}: missing name`);
   if (!b.vendor || typeof b.vendor !== "string") throw new Error(`Invalid board ${b.id}: missing vendor`);
   if (!b.targetChip || !isChipOk(b.targetChip))
-    throw new Error(`Invalid board ${b.id}: targetChip not in {esp32s3,esp32c6,esp32p4,esp32c3,esp32c2,esp32,esp32s2}`);
+    throw new Error(`Invalid board ${b.id}: targetChip not in {esp32s3,esp32c6,esp32p4,esp32c3,esp32c2,esp32,esp32s2,esp32c5,esp32h2}`);
   if (!b.source || typeof b.source !== "object" || !b.source)
     throw new Error(`Invalid board ${b.id}: missing source object`);
   const s = b.source as { document?: unknown; version?: unknown; url?: unknown };
@@ -103,7 +103,7 @@ function loadBoard(raw: unknown): BoardProfile {
 }
 
 function isChipOk(v: unknown): v is TargetChip {
-  return v === "esp32s3" || v === "esp32c6" || v === "esp32p4" || v === "esp32c3" || v === "esp32c2" || v === "esp32" || v === "esp32s2";
+  return v === "esp32s3" || v === "esp32c6" || v === "esp32p4" || v === "esp32c3" || v === "esp32c2" || v === "esp32" || v === "esp32s2" || v === "esp32c5" || v === "esp32h2";
 }
 
 export const boards: BoardProfile[] = [loadBoard(s3Devkitc1), loadBoard(c6Devkitc1), loadBoard(c6Devkitm1), loadBoard(p4FunctionEvBoard)];
