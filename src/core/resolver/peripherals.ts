@@ -31,7 +31,10 @@ export function supportsSignal(pin: PinDefinition, signal: SignalDefinition): bo
   return (signal.direction !== "output" ? pin.capabilities.input : true) &&
     (signal.direction !== "input" ? pin.capabilities.output : true) &&
     (!signal.openDrain || pin.capabilities.openDrain) &&
-    (signal.routing === "gpio_matrix" ? pin.capabilities.gpioMatrix
+    // `gpio` narrows the allowed pads: it is the fixed pad list for `dedicated` signals and an
+    // explicit allow-list for `gpio_matrix` signals (e.g. the ESP32-P4 low-power domain GPIO0-15,
+    // which is the only pad set reachable from the LP GPIO matrix).
+    (signal.routing === "gpio_matrix" ? pin.capabilities.gpioMatrix && (!signal.gpio || signal.gpio.includes(pin.gpio))
       : signal.routing === "analog" ? pin.capabilities.analog
       : Boolean(signal.gpio?.includes(pin.gpio)));
 }

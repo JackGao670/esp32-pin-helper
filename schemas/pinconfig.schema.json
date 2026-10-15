@@ -96,9 +96,10 @@
                 "rmt0","rmt1","rmt2","rmt3","rmt4","rmt5","rmt6","rmt7",
                 "i2s0","i2s1","i2s2",
                 "camera0","camera_mipi0","lcd0","lcd_mcu0","lcd_mipi0","usb0",
-                "twai0","twai1","twai2","sdmmc1"
+                "twai0","twai1","twai2","sdmmc1",
+                "lpuart0","lpi2c0"
               ],
-              "description": "ESP32-P4 (IDF v5.4): UART 0-4, I2C 0-1, SPI 2 only, LEDC 0-7, ADC 1+2 (ADC1 GPIO16-23, ADC2 GPIO49-54), RMT 0-7, I2S 0-2, DVP Camera 0, MIPI CSI-2 Camera 0 (2 lane), RGB LCD 0 (up to 24-bit), LCD_MCU 0 (8080/i80 8-16-bit), MIPI DSI LCD 0 (up to 4 lane), USB 0, TWAI 0-2, SDMMC 1 only (slot 1 GPIOMatrix-routed)."
+              "description": "ESP32-P4 (IDF v5.4): UART 0-4, I2C 0-1, SPI 2 only, LEDC 0-7, ADC 1+2 (ADC1 GPIO16-23, ADC2 GPIO49-54), RMT 0-7, I2S 0-2, DVP Camera 0, MIPI CSI-2 Camera 0 (2 lane), RGB LCD 0 (up to 24-bit), LCD_MCU 0 (8080/i80 8-16-bit), MIPI DSI LCD 0 (up to 4 lane), USB 0, TWAI 0-2, SDMMC 1 only (slot 1 GPIOMatrix-routed), plus the LP UART and LP I2C controllers (lpuart0/lpi2c0) which reach only the low-power pads GPIO0-15."
             },
             "additionalProperties": {
               "allOf": [
@@ -116,7 +117,9 @@
                 { "if": { "properties": { "type": { "const": "lcd_mipi"     }}}, "then": { "properties": { "instance": { "enum": [0] }}}},
                 { "if": { "properties": { "type": { "const": "usb"          }}}, "then": { "properties": { "instance": { "enum": [0] }}}},
                 { "if": { "properties": { "type": { "const": "twai"         }}}, "then": { "properties": { "instance": { "enum": [0,1,2] }}}},
-                { "if": { "properties": { "type": { "const": "sdmmc"        }}}, "then": { "properties": { "instance": { "enum": [1] }}}}
+                { "if": { "properties": { "type": { "const": "sdmmc"        }}}, "then": { "properties": { "instance": { "enum": [1] }}}},
+                { "if": { "properties": { "type": { "const": "lpuart"       }}}, "then": { "properties": { "instance": { "enum": [0] }}}},
+                { "if": { "properties": { "type": { "const": "lpi2c"        }}}, "then": { "properties": { "instance": { "enum": [0] }}}}
               ]
             }
           }
@@ -207,8 +210,8 @@
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["uart", "i2c", "spi", "ledc", "adc", "rmt", "i2s", "camera", "lcd", "lcd_mcu", "camera_mipi", "lcd_mipi", "usb", "twai", "sdmmc"],
-          "description": "Peripheral type. Unknown types produce an Unsupported diagnostic. camera/lcd = parallel DVP / RGB via GPIOMatrix; lcd_mcu = 8080 (i80) parallel LCD bus; camera_mipi / lcd_mipi = MIPI CSI-2 / DSI with dedicated differential pads (ESP32-P4 only); usb = fixed internal USB PHY pads (D+/D- pair); twai = CAN controller (TX/RX pair, external transceiver); sdmmc = SDMMC host bus (1-bit clk/cmd/d0 baseline, optional 4-bit d1-d3)."
+          "enum": ["uart", "i2c", "spi", "ledc", "adc", "rmt", "i2s", "camera", "lcd", "lcd_mcu", "camera_mipi", "lcd_mipi", "usb", "twai", "sdmmc", "lpuart", "lpi2c"],
+          "description": "Peripheral type. Unknown types produce an Unsupported diagnostic. camera/lcd = parallel DVP / RGB via GPIOMatrix; lcd_mcu = 8080 (i80) parallel LCD bus; camera_mipi / lcd_mipi = MIPI CSI-2 / DSI with dedicated differential pads (ESP32-P4 only); usb = fixed internal USB PHY pads (D+/D- pair); twai = CAN controller (TX/RX pair, external transceiver); sdmmc = SDMMC host bus (1-bit clk/cmd/d0 baseline, optional 4-bit d1-d3); lpuart / lpi2c = the ESP32-P4 low-power UART / I2C controllers, which are separate from uart0-4 / i2c0-1 and can only reach the low-power domain pads GPIO0-15."
         },
         "instance": { "type": "integer", "minimum": 0, "title": "Peripheral instance",
           "description": "Instance numbers are chip-specific: e.g. UART max is 2 on S3, 1 on C6, 4 on P4."
@@ -336,6 +339,22 @@
           "then": {
             "properties": {
               "signals": { "$ref": "#/definitions/signals-sdmmc" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "lpuart" } } },
+          "then": {
+            "properties": {
+              "signals": { "$ref": "#/definitions/signals-lpuart" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "lpi2c" } } },
+          "then": {
+            "properties": {
+              "signals": { "$ref": "#/definitions/signals-lpi2c" }
             }
           }
         }
@@ -560,6 +579,28 @@
         "d3":  { "$ref": "#/definitions/gpioRef", "description": "SD data line 3 (optional; 4-bit mode)." }
       },
       "description": "SDMMC host bus. The 1-bit baseline is clk + cmd + d0; d1-d3 extend it to 4-bit. Once any of d1-d3 is assigned the whole 4-bit group must be complete. ESP32-S3 exposes two GPIOMatrix-routed slots (sdmmc0/sdmmc1, any GPIO); ESP32-P4 exposes only the GPIOMatrix-routed slot 1 (sdmmc1); ESP32-C6 has no SDMMC host. 8-line eMMC (d4-d7) is not modeled."
+    },
+    "signals-lpuart": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tx":  { "$ref": "#/definitions/gpioRef", "description": "LP UART TX (LP_UART_TXD, output, required). Default LP IO MUX pad is LP_GPIO14 (GPIO14)." },
+        "rx":  { "$ref": "#/definitions/gpioRef", "description": "LP UART RX (LP_UART_RXD, input, required). Default LP IO MUX pad is LP_GPIO15 (GPIO15)." },
+        "rts": { "$ref": "#/definitions/gpioRef", "description": "LP UART RTS (LP_UART_RTSN, output, active low, optional)." },
+        "cts": { "$ref": "#/definitions/gpioRef", "description": "LP UART CTS (LP_UART_CTSN, input, active low, optional)." },
+        "dsr": { "$ref": "#/definitions/gpioRef", "description": "LP UART DSR (LP_UART_DSRN, input, active low, optional)." },
+        "dtr": { "$ref": "#/definitions/gpioRef", "description": "LP UART DTR (LP_UART_DTRN, output, active low, optional)." }
+      },
+      "description": "ESP32-P4 only: the standalone low-power UART controller (separate from uart0-4). Its signals are routed through the LP GPIO matrix, so they can only reach the low-power domain pads GPIO0-15 (VDD_LP/VDD_BAT)."
+    },
+    "signals-lpi2c": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sda": { "$ref": "#/definitions/gpioRef", "description": "LP I2C SDA (LP_I2C_SDA, bidirectional open-drain, required)." },
+        "scl": { "$ref": "#/definitions/gpioRef", "description": "LP I2C SCL (LP_I2C_SCL, bidirectional open-drain, required)." }
+      },
+      "description": "ESP32-P4 only: the standalone low-power I2C controller (separate from i2c0-1). Its signals are routed through the LP GPIO matrix, so they can only reach the low-power domain pads GPIO0-15 (VDD_LP/VDD_BAT)."
     }
   }
 }

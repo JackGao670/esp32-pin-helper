@@ -106,6 +106,29 @@ test("P4 standard controller instances and routes are target-specific", () => {
   assert.ok(validateGpio(config).some(problem => /ESP32-P4/.test(problem.message)));
 });
 
+test("P4 LP UART/I2C only reach the low-power domain pads GPIO0-15", () => {
+  assert.ok(definition("lpuart", 0, "esp32p4"));
+  assert.equal(definition("lpuart", 1, "esp32p4"), undefined);
+  assert.ok(definition("lpi2c", 0, "esp32p4"));
+  assert.equal(definition("lpi2c", 1, "esp32p4"), undefined);
+  // The LP controllers are P4-only; they do not exist on the other supported chips.
+  assert.equal(definition("lpuart", 0, "esp32s3"), undefined);
+  assert.equal(definition("lpi2c", 0, "esp32c6"), undefined);
+  const lpDomain = Array.from({ length: 16 }, (_, i) => i);
+  const signal = (type: string, id: string) => definition(type, 0, "esp32p4")!.signals.find(entry => entry.id === id)!;
+  assert.deepEqual(candidates(signal("lpuart", "tx"), "esp32p4"), lpDomain);
+  assert.deepEqual(candidates(signal("lpi2c", "sda"), "esp32p4"), lpDomain);
+  // HP-only pads (e.g. GPIO20) must never be offered for an LP signal.
+  assert.equal(candidates(signal("lpuart", "tx"), "esp32p4").includes(20), false);
+  // Routing an LP signal to an HP pad is a hard error.
+  const bad = setSignal(addPeripheral(createConfig("esp32p4"), "lpuart", 0), "lpuart0", "tx", 20);
+  assert.ok(validateGpio(bad).some(problem => problem.severity === "error" && problem.owner === "lpuart0"));
+  // The documented LP IO MUX defaults (LP_GPIO14 / LP_GPIO15) route cleanly.
+  let good = setSignal(addPeripheral(createConfig("esp32p4"), "lpuart", 0), "lpuart0", "tx", 14);
+  good = setSignal(good, "lpuart0", "rx", 15);
+  assert.deepEqual(validateGpio(good), []);
+});
+
 test("P1 peripherals expose target-specific instance counts", () => {
   assert.ok(definition("ledc", 7, "esp32s3"));
   assert.ok(definition("ledc", 7, "esp32p4"));

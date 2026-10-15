@@ -36,7 +36,7 @@ test("pinconfig.schema.json v1 covers target chips, gpio functions and P1 periph
   assert.deepEqual(schema.properties.target.properties.chip.enum, ["esp32s3", "esp32c6", "esp32p4"]);
   assert.deepEqual(schema.properties.pins.items.properties.function.enum, ["GPIO_INPUT", "GPIO_OUTPUT", "GPIO_OPEN_DRAIN"]);
   const peripheral = schema.definitions.peripheral;
-  assert.deepEqual(peripheral.properties.type.enum, ["uart", "i2c", "spi", "ledc", "adc", "rmt", "i2s", "camera", "lcd", "lcd_mcu", "camera_mipi", "lcd_mipi", "usb", "twai", "sdmmc"]);
+  assert.deepEqual(peripheral.properties.type.enum, ["uart", "i2c", "spi", "ledc", "adc", "rmt", "i2s", "camera", "lcd", "lcd_mcu", "camera_mipi", "lcd_mipi", "usb", "twai", "sdmmc", "lpuart", "lpi2c"]);
   assert.equal("signals-uart" in schema.definitions, true);
   assert.equal("signals-adc" in schema.definitions, true);
   assert.equal("signals-i2s" in schema.definitions, true);
@@ -48,6 +48,10 @@ test("pinconfig.schema.json v1 covers target chips, gpio functions and P1 periph
   assert.equal(schema.definitions["signals-sdmmc"].additionalProperties, false);
   assert.deepEqual(Object.keys(schema.definitions["signals-twai"].properties).sort(), ["tx", "rx", "bus_off", "clkout"].sort());
   assert.deepEqual(Object.keys(schema.definitions["signals-sdmmc"].properties).sort(), ["clk", "cmd", "d0", "d1", "d2", "d3"].sort());
+  assert.equal(schema.definitions["signals-lpuart"].additionalProperties, false);
+  assert.equal(schema.definitions["signals-lpi2c"].additionalProperties, false);
+  assert.deepEqual(Object.keys(schema.definitions["signals-lpuart"].properties).sort(), ["tx", "rx", "rts", "cts", "dsr", "dtr"].sort());
+  assert.deepEqual(Object.keys(schema.definitions["signals-lpi2c"].properties).sort(), ["sda", "scl"].sort());
   assert.ok(schema.definitions["signals-adc"].description.includes("ADC1"));
   // Schema's gpioRef regex should reject malformed values.
   const gpioPattern = new RegExp(schema.definitions.gpioRef.pattern);
@@ -172,4 +176,16 @@ test("schema root allOf constrains per-chip owner names and per-type instance en
   assert.equal(owners("esp32p4").has("sdmmc0"), false);
   assert.equal(owners("esp32c6").has("sdmmc0"), false);
   assert.equal(instEnumForType("esp32c6", "sdmmc"), undefined);
+
+  // LP UART / LP I2C exist only on ESP32-P4 (single instance each), on the GPIO0-15 LP domain.
+  assert.deepEqual(instEnumForType("esp32p4", "lpuart"), [0]);
+  assert.deepEqual(instEnumForType("esp32p4", "lpi2c"), [0]);
+  assert.equal(owners("esp32p4").has("lpuart0"), true);
+  assert.equal(owners("esp32p4").has("lpi2c0"), true);
+  assert.equal(owners("esp32p4").has("lpuart1"), false);
+  assert.equal(owners("esp32p4").has("lpi2c1"), false);
+  assert.equal(owners("esp32s3").has("lpuart0"), false);
+  assert.equal(owners("esp32s3").has("lpi2c0"), false);
+  assert.equal(owners("esp32c6").has("lpuart0"), false);
+  assert.equal(owners("esp32c6").has("lpi2c0"), false);
 });

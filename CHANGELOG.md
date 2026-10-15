@@ -47,6 +47,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `espPinPlanner.language` (`auto` / `en` / `zh-cn`). Command titles, the Activity Bar view and every
   setting description are localised through `package.nls.json` / `package.nls.zh-cn.json`, and validator
   diagnostics intentionally stay English so tooling and existing tests keep a stable contract.
+- **ESP32-P4 low-power peripherals** (§4.1): the P4 database now models the **LP UART** (`lpuart0`, TXD/RXD
+  required plus CTSN/RTSN/DSRN/DTRN) and the **LP I2C** (`lpi2c0`, SDA/SCL open-drain) controllers, which are
+  separate from UART0-4 / I2C0-1. LP signals are routed through the LP GPIO matrix and can only reach the
+  low-power domain pads **GPIO0-15** (VDD_LP / VDD_BAT), so every LP signal carries an explicit pad allow-list
+  and the candidate/validator layer rejects HP pads such as GPIO20. The schema gains the `lpuart` / `lpi2c`
+  types, the `signals-lpuart` / `signals-lpi2c` signal maps and the P4 owner/instance constraints. LP_SPI,
+  LP_I2S and LP_CAM remain unmodelled.
 
 ### Fixed
 - **ESP32-P4 ADC units** (§4.1): the P4 database now models **two** ADC units — ADC1 on GPIO16-23 and
