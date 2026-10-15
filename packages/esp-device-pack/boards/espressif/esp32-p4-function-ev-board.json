@@ -3,7 +3,7 @@
   "name": "ESP32-P4-Function-EV-Board v1.5.2 (with HMI subboard)",
   "vendor": "espressif",
   "targetChip": "esp32p4",
-  "package": "QFN-88 (ESP32-P4)",
+  "package": "QFN104 (10x10 mm)",
   "boardPcbVersion": "v1.5.2",
   "source": {
     "document": "ESP32-P4-Function-EV-Board User Guide + esp-bsp v5.0.3 API",

@@ -3,9 +3,9 @@
   "name": "ESP32-P4",
   "architecture": "RISC-V",
   "databaseVersion": "0.1.0",
-  "scope": "Logical GPIO, standard UART/I2C/SPI, LEDC channels, ADC1/ADC2, RMT channels and I2S; memory, package, LP and high-speed resources not fully checked",
+  "scope": "Logical GPIO, standard UART/I2C/SPI, LEDC channels, ADC1/ADC2, RMT channels and I2S; single QFN104 (10x10 mm) package (ESP32-P4NRW16/NRW32) that bonds out all 55 GPIOs and keeps flash/PSRAM on dedicated pads, so no GPIO is reserved for memory; LP and high-speed resources not fully checked",
   "source": {
-    "document": "ESP-IDF soc/esp32p4 adc_channel.h (ADC1 GPIO16-23, ADC2 GPIO49-54) + GPIO & RTC GPIO",
+    "document": "ESP-IDF soc/esp32p4 adc_channel.h (ADC1 GPIO16-23, ADC2 GPIO49-54) + GPIO & RTC GPIO + ESP32-P4 datasheet Table 2-1 Pin Overview (QFN104, all 55 GPIOs bonded)",
     "version": "v5.4",
     "url": "https://github.com/espressif/esp-idf/blob/v5.4/components/soc/esp32p4/include/soc/adc_channel.h"
   },

@@ -77,6 +77,16 @@ test("P4 GPIO capabilities, boot and USB pins do not inherit C6 or S3 restrictio
   assert.deepEqual(device.pins[45].restrictions, []);
 });
 
+test("P4 ships in one QFN104 package that bonds out every GPIO", () => {
+  const device = getDevice("esp32p4")!;
+  assert.match(device.scope, /QFN104/);
+  // The single package bonds out all 55 GPIOs, so no pin is flagged as missing on a variant.
+  assert.equal(device.pins.length, 55);
+  assert.equal(device.pins.some(pin => pin.restrictions.some(text => /bonded/.test(text))), false);
+  // Flash/PSRAM sit on dedicated pads, so no GPIO carries a memory reservation either.
+  assert.equal(device.pins.some(pin => pin.restrictions.some(text => /Flash\/PSRAM/.test(text))), false);
+});
+
 test("P4 standard controller instances and routes are target-specific", () => {
   assert.ok(definition("uart", 4, "esp32p4"));
   assert.equal(definition("uart", 5, "esp32p4"), undefined);

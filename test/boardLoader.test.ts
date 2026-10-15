@@ -63,6 +63,7 @@ test("boardLoader: P4 Function-EV-Board parses dedicated-free GPIO defaults", ()
   assert.ok(p4, "P4 Function-EV-Board sample loaded");
   assert.equal(p4!.targetChip, "esp32p4");
   assert.equal(p4!.vendor, "espressif");
+  assert.equal(p4!.package, "QFN104 (10x10 mm)", "the P4 ships in a single QFN104 package");
   assert.ok(/^https:/.test(p4!.source.url), "source URL is https");
 
   // reserved pins from pins[].reserved=true union

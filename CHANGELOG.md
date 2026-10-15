@@ -55,6 +55,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   GPIO49-54 assignment on `adc1` was accepted even though the ESP-IDF driver rejects it. (The ESP-IDF GPIO
   summary page labels GPIO49-54 as `ADC1_CH8-13`, contradicting the driver header; the header/datasheet
   mapping is used here.)
+- **ESP32-P4 package** (§4.1): the P4 Function-EV board profile declared `QFN-88`, which does not exist
+  for this chip. ESP32-P4 ships in a single **QFN104 (10x10 mm)** package (`ESP32-P4NRW16` / `NRW32`, same
+  pinout) that bonds out all 55 GPIOs, so no un-bonded pin has to be modelled; flash/PSRAM use dedicated
+  `FLASH_*` pads and reserve no GPIO. The board metadata was corrected and the chip scope now states this
+  instead of the previous "package not fully checked" caveat.
 
 ## [0.0.3] - 2026-10-14
 
