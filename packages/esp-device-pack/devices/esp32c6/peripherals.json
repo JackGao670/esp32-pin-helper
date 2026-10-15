@@ -12,7 +12,7 @@
     "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32c6/api-reference/peripherals/usb_serial_jtag.html",
     "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32c6/api-reference/peripherals/twai.html"
   ],
-  "scope": "Standard UART, HP I2C, standard SPI master, LEDC channels, ADC1, RMT channels and I2S master only; LP controllers excluded. RMT TX/RX direction is not enforced (C6 channels 0-1 are TX-only and 2-3 RX-only). usb0 models the fixed USB Serial/JTAG pads (D- = GPIO12, D+ = GPIO13); the D+/D- pair must be routed together. The C6 has no LCD_CAM peripheral, so no RGB/8080 display is modeled. twai0/twai1 model the two TWAI (CAN) controllers (TX/RX required, BUS-OFF/CLKOUT optional) routed through GPIOMatrix; an external transceiver is required. The C6 provides only an SDIO 2.0 slave controller and no SDMMC host, so no SD card host is modeled.",
+  "scope": "Standard UART, HP I2C, standard SPI master (plus the optional quad-mode WP = IO2 / HD = IO3 lines), LEDC channels, ADC1, RMT channels and I2S master only; LP controllers excluded. RMT TX/RX direction is not enforced (C6 channels 0-1 are TX-only and 2-3 RX-only). usb0 models the fixed USB Serial/JTAG pads (D- = GPIO12, D+ = GPIO13); the D+/D- pair must be routed together. The C6 has no LCD_CAM peripheral, so no RGB/8080 display is modeled. twai0/twai1 model the two TWAI (CAN) controllers (TX/RX required, BUS-OFF/CLKOUT optional) routed through GPIOMatrix; an external transceiver is required. The C6 provides only an SDIO 2.0 slave controller and no SDMMC host, so no SD card host is modeled.",
   "peripherals": [
     { "type": "uart", "instances": [0, 1], "signals": [
       { "id": "tx", "direction": "output", "routing": "gpio_matrix", "required": true },
@@ -28,7 +28,9 @@
       { "id": "mosi", "direction": "output", "routing": "gpio_matrix", "required": false },
       { "id": "miso", "direction": "input", "routing": "gpio_matrix", "required": false },
       { "id": "sclk", "direction": "output", "routing": "gpio_matrix", "required": true },
-      { "id": "cs", "direction": "output", "routing": "gpio_matrix", "required": false }
+      { "id": "cs", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "wp", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "hd", "direction": "output", "routing": "gpio_matrix", "required": false }
     ] },
     { "type": "ledc", "instances": [0, 1, 2, 3, 4, 5], "signals": [
       { "id": "out", "direction": "output", "routing": "gpio_matrix", "required": true }

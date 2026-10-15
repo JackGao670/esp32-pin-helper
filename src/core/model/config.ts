@@ -11,11 +11,21 @@ export interface PeripheralAssignment {
   [key: string]: unknown;
 }
 
+export type MemoryBusMode = "none" | "quad" | "octal";
+
+/** Explicit declaration of the module's in-package flash / PSRAM bus. */
+export interface TargetOptions {
+  flashMode?: MemoryBusMode;
+  psramMode?: MemoryBusMode;
+  [key: string]: unknown;
+}
+
 export interface PinConfigDocument {
   version: 1;
   target: { chip: string; [key: string]: unknown };
   pins: PinAssignment[];
   peripherals?: Record<string, PeripheralAssignment>;
+  options?: TargetOptions;
   [key: string]: unknown;
 }
 
@@ -50,6 +60,15 @@ export function parseConfig(text: string): PinConfigDocument {
           peripheral.instance < 0 || !record(peripheral.signals) ||
           !Object.values(peripheral.signals).every(signal => typeof signal === "string")) {
         throw new Error("Invalid peripheral assignment.");
+      }
+    }
+  }
+  if (value.options !== undefined) {
+    if (!record(value.options)) throw new Error("options must be an object.");
+    for (const key of ["flashMode", "psramMode"]) {
+      const mode = value.options[key];
+      if (mode !== undefined && mode !== "none" && mode !== "quad" && mode !== "octal") {
+        throw new Error(`options.${key} must be "none", "quad" or "octal".`);
       }
     }
   }

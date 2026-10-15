@@ -11,7 +11,7 @@
     "https://github.com/espressif/esp-idf/blob/v5.4/components/soc/esp32c2/include/soc/adc_channel.h (ADC1 GPIO0-4 = CH0-4; the file also carries a legacy ADC2 GPIO5 entry, but SOC_ADC_PERIPH_NUM is 1 and the GPIO docs leave GPIO5 without an analog function, so ADC2 is not modeled)",
     "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32c2/api-reference/peripherals/gpio.html (GPIO11-17 are dedicated to the SiP flash on variants with in-package flash, leaving 14 usable GPIOs; GPIO8/GPIO9 are strapping pins)"
   ],
-  "scope": "Standard UART, HP I2C, standard SPI master, LEDC channels and ADC1 only; the ESP32-C2 has no RMT, I2S, TWAI (CAN), USB Serial/JTAG, LCD_CAM or SDMMC host controller, so none of those are modeled. SPI0/1 belong to the flash controller, so only SPI2 is offered as a GP-SPI on the GPIO matrix. ADC1 is the only ADC unit (SOC_ADC_PERIPH_NUM 1) with five channels on GPIO0-4; the ADC2 entry that still exists in the soc adc_channel.h header is not modeled because the unit count and the GPIO docs do not expose a second unit. GPIO19/GPIO20 default to U0RXD/U0TXD.",
+  "scope": "Standard UART, HP I2C, standard SPI master (plus the optional quad-mode WP = IO2 / HD = IO3 lines), LEDC channels and ADC1 only; the ESP32-C2 has no RMT, I2S, TWAI (CAN), USB Serial/JTAG, LCD_CAM or SDMMC host controller, so none of those are modeled. SPI0/1 belong to the flash controller, so only SPI2 is offered as a GP-SPI on the GPIO matrix. ADC1 is the only ADC unit (SOC_ADC_PERIPH_NUM 1) with five channels on GPIO0-4; the ADC2 entry that still exists in the soc adc_channel.h header is not modeled because the unit count and the GPIO docs do not expose a second unit. GPIO19/GPIO20 default to U0RXD/U0TXD.",
   "peripherals": [
     { "type": "uart", "instances": [0, 1], "signals": [
       { "id": "tx", "direction": "output", "routing": "gpio_matrix", "required": true },
@@ -27,7 +27,9 @@
       { "id": "mosi", "direction": "output", "routing": "gpio_matrix", "required": false },
       { "id": "miso", "direction": "input", "routing": "gpio_matrix", "required": false },
       { "id": "sclk", "direction": "output", "routing": "gpio_matrix", "required": true },
-      { "id": "cs", "direction": "output", "routing": "gpio_matrix", "required": false }
+      { "id": "cs", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "wp", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "hd", "direction": "output", "routing": "gpio_matrix", "required": false }
     ] },
     { "type": "ledc", "instances": [0, 1, 2, 3, 4, 5], "signals": [
       { "id": "out", "direction": "output", "routing": "gpio_matrix", "required": true }

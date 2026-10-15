@@ -99,6 +99,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   pads (D- = GPIO26, D+ = GPIO27); it has no Wi-Fi, USB OTG or SDMMC host. The `TargetChip` union, the
   settings guards, the schema (`chip` enum plus per-chip owner/instance rules), the RMT TX/RX bank rule and
   the AI chip detector were extended accordingly. No reference boards are added.
+- **SPI quad-mode lines and memory options** (§1.7): the SPI model now exposes the optional **quad-mode
+  WP = IO2** and **HD = IO3** lines next to mosi/miso/sclk/cs on all nine chips, and `peripheralRule`
+  enforces bus-mode completeness (single-line needs at least MOSI or MISO; once WP or HD appears, MOSI+MISO
+  must be present and WP/HD must be assigned as a pair). A new optional `options` document field
+  (`options.flashMode` / `options.psramMode` = `none` / `quad` / `octal`) lets a module declare its
+  in-package memory bus: an explicit `octal` declaration turns the Octal SPI pads — and the standard D0-D7
+  memory pads — from advisory hints into **hard errors**, while an absent field keeps the existing warning
+  heuristics. The field is validated by `parseConfig` (unknown modes and non-object values are rejected) and
+  round-tripped verbatim. The WP/HD availability comes from the ESP-IDF `gpio_sig_map.h` headers; the
+  ESP32-C5 lines were read from v6.1 because the chip is only supported from v5.5.2 onwards (noted in its
+  `scope`), and the ESP32-S2 quad lines belong to SPI2 alone since its SPI3 host is single-line.
+
+### Changed
+- **SPI quad signals** (§1.7): the schema's `signals-spi` map dropped the `d` / `q` aliases. No chip's
+  `peripherals.json` ever declared them, so the routing checks against them were dead code and their
+  descriptions contradicted the real ESP-IDF naming (IO0 = D/MOSI, IO1 = Q/MISO); quad mode is now expressed
+  with the genuine WP (IO2) / HD (IO3) lines, and the redundant empty `sclk` branch was removed.
 
 ### Fixed
 - **ESP32-P4 ADC units** (§4.1): the P4 database now models **two** ADC units — ADC1 on GPIO16-23 and

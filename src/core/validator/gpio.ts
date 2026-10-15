@@ -128,18 +128,22 @@ const peripheralRule: ValidationRule = { id: "peripherals", check(config, ctx) {
       }
     }
     if (peripheral.type === "spi") {
-      const hasMosmiso = Boolean(peripheral.signals.mosi || peripheral.signals.miso || peripheral.signals.d || peripheral.signals.q || peripheral.signals.wp || peripheral.signals.hd);
-      if (!hasMosmiso) problems.push({ ...location, severity: "warning", message: `${owner}: assign at least MOSI or MISO (or D/Q for quad mode) for a working SPI bus.` });
-      if (!peripheral.signals.sclk) {
-        // already a required-signal warning above; skip duplicate
-      } else if (!hasMosmiso) {
-        // covered
+      // Single-line mode needs SCLK (required signal warning above) plus at least one data line.
+      if (!peripheral.signals.mosi && !peripheral.signals.miso) {
+        problems.push({ ...location, severity: "warning", message: `${owner}: assign at least MOSI (IO0) or MISO (IO1) for a working SPI bus.` });
       }
       if (!peripheral.signals.cs && peripheral.softwareCs !== true) {
         problems.push({ ...location, severity: "warning", message: `${owner}: CS is unassigned; set softwareCs=true in JSON if managed externally.` });
       }
-      if ((peripheral.signals.d || peripheral.signals.q) && !(peripheral.signals.mosi && peripheral.signals.miso)) {
-        problems.push({ ...location, severity: "warning", message: `${owner}: quad mode (D/Q/WP/HD) also requires MOSI (IO0) and MISO (IO1); rename D->mosi and Q->miso or add both.` });
+      // Quad mode reuses IO2/IO3 as WP/HD on top of the IO0/IO1 data pair, so it must be complete.
+      const quadLines = ["wp", "hd"].filter(id => peripheral.signals[id]);
+      if (quadLines.length) {
+        if (!(peripheral.signals.mosi && peripheral.signals.miso)) {
+          problems.push({ ...location, severity: "warning", message: `${owner}: quad mode (WP/HD) also requires MOSI (IO0) and MISO (IO1) as the D/Q data lines.` });
+        }
+        if (quadLines.length === 1) {
+          problems.push({ ...location, severity: "warning", message: `${owner}: quad mode needs both WP (IO2) and HD (IO3); only ${quadLines[0].toUpperCase()} is assigned.` });
+        }
       }
     }
     if (peripheral.type === "i2s") {
@@ -331,19 +335,29 @@ const memoryModeRule: ValidationRule = { id: "memoryMode", check(config, _ctx) {
   if (!device) return [];
   const octalPins = new Set(device.pins.filter(pin => pin.restrictions.some(text => /Reserved when Octal Flash\/PSRAM is used/.test(text))).map(pin => pin.gpio));
   if (octalPins.size === 0) return [];
-  const usedGpios = new Set(resolveAssignments(config).map(assignment => assignment.gpio));
-  const anyOctalUsed = [...octalPins].some(gpio => usedGpios.has(gpio));
-  if (!anyOctalUsed) return [];
+  const assignments = resolveAssignments(config);
+  // `options.flashMode` / `options.psramMode` turn the advisory hint into a hard reservation:
+  // an explicit octal bus declaration means the memory pads are physically taken.
+  const options = config.options ?? {};
+  const octalKey = options.flashMode === "octal" ? "flashMode" : options.psramMode === "octal" ? "psramMode" : undefined;
+  if (octalKey === undefined) {
+    const usedGpios = new Set(assignments.map(assignment => assignment.gpio));
+    if (![...octalPins].some(gpio => usedGpios.has(gpio))) return [];
+  }
   const quadMemoryPins = new Set(device.pins.filter(pin => pin.restrictions.some(text => /Usually used by Flash\/PSRAM/.test(text))).map(pin => pin.gpio));
   const problems: Problem[] = [];
-  for (const assignment of resolveAssignments(config)) {
+  for (const assignment of assignments) {
     const path = assignment.owner ? ["peripherals", assignment.owner, "signals", assignment.signal!] : ["pins"];
     if (octalPins.has(assignment.gpio)) {
-      problems.push({ gpio: assignment.gpio, owner: assignment.owner, path, severity: "warning",
-        message: `GPIO${assignment.gpio} is an Octal SPI upper data pin (D4-D7); together with quad pins it forms the full Octal Flash/PSRAM bus.` });
+      problems.push({ gpio: assignment.gpio, owner: assignment.owner, path, severity: octalKey ? "error" : "warning",
+        message: octalKey
+          ? `GPIO${assignment.gpio} is an Octal SPI upper data pin (D4-D7) reserved by options.${octalKey}=octal; move this signal to another GPIO.`
+          : `GPIO${assignment.gpio} is an Octal SPI upper data pin (D4-D7); together with quad pins it forms the full Octal Flash/PSRAM bus.` });
     } else if (quadMemoryPins.has(assignment.gpio)) {
-      problems.push({ gpio: assignment.gpio, owner: assignment.owner, path, severity: "warning",
-        message: `GPIO${assignment.gpio} is the standard Flash/PSRAM data/clock pin; Octal SPI pins are also assigned, so the whole D0-D7 bus is reserved for memory.` });
+      problems.push({ gpio: assignment.gpio, owner: assignment.owner, path, severity: octalKey ? "error" : "warning",
+        message: octalKey
+          ? `GPIO${assignment.gpio} is part of the D0-D7 memory bus reserved by options.${octalKey}=octal; move this signal to another GPIO.`
+          : `GPIO${assignment.gpio} is the standard Flash/PSRAM data/clock pin; Octal SPI pins are also assigned, so the whole D0-D7 bus is reserved for memory.` });
     }
   }
   return problems;

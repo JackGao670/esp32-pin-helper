@@ -15,7 +15,7 @@
     "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/twai.html",
     "https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32s3/api-reference/peripherals/sdmmc_host.html"
   ],
-  "scope": "UART full duplex, I2C, standard SPI master, LEDC channels, ADC1/ADC2, RMT channels and I2S master; no high-speed timing validation. RMT TX/RX direction is not enforced (S3 channels 0-3 are TX-only and 4-7 RX-only). ADC2 shares hardware with Wi-Fi. Camera (DVP, 8-bit) and LCD (RGB, up to 16-bit documented; 24-bit signal pins are reserved as optional) are modeled at the baseline GPIOMatrix routing level; signal integrity and pixel clock constraints are NOT yet validated. Sensor and panel reset/powerdown pins are declared so the planner can reserve them. Usb0 models the fixed internal-USB pads (D- = GPIO19, D+ = GPIO20) shared with USB Serial/JTAG; the D+/D- pair must be routed together. lcd_mcu0 models the LCD 8080 (i80) parallel interface (DC/WR + optional RD/CS and an 8-bit baseline data bus d0-d7, extendable to 16-bit d8-d15) routed through GPIOMatrix; the i80 data-bus width is validated. twai0 models the single TWAI (CAN) controller (TX/RX required, BUS-OFF/CLKOUT optional) routed through GPIOMatrix; an external transceiver is required and is not part of the config. sdmmc0/sdmmc1 model the two SDMMC host slots (1-bit baseline clk/cmd/d0, 4-bit adds d1-d3); both slots are GPIOMatrix-routed so any GPIO may be used, and 8-line eMMC (d4-d7) is not modeled.",
+  "scope": "UART full duplex, I2C, standard SPI master (SPI2/SPI3 also expose the optional quad-mode WP = IO2 / HD = IO3 lines), LEDC channels, ADC1/ADC2, RMT channels and I2S master; no high-speed timing validation. RMT TX/RX direction is not enforced (S3 channels 0-3 are TX-only and 4-7 RX-only). ADC2 shares hardware with Wi-Fi. Camera (DVP, 8-bit) and LCD (RGB, up to 16-bit documented; 24-bit signal pins are reserved as optional) are modeled at the baseline GPIOMatrix routing level; signal integrity and pixel clock constraints are NOT yet validated. Sensor and panel reset/powerdown pins are declared so the planner can reserve them. Usb0 models the fixed internal-USB pads (D- = GPIO19, D+ = GPIO20) shared with USB Serial/JTAG; the D+/D- pair must be routed together. lcd_mcu0 models the LCD 8080 (i80) parallel interface (DC/WR + optional RD/CS and an 8-bit baseline data bus d0-d7, extendable to 16-bit d8-d15) routed through GPIOMatrix; the i80 data-bus width is validated. twai0 models the single TWAI (CAN) controller (TX/RX required, BUS-OFF/CLKOUT optional) routed through GPIOMatrix; an external transceiver is required and is not part of the config. sdmmc0/sdmmc1 model the two SDMMC host slots (1-bit baseline clk/cmd/d0, 4-bit adds d1-d3); both slots are GPIOMatrix-routed so any GPIO may be used, and 8-line eMMC (d4-d7) is not modeled.",
   "peripherals": [
     {
       "type": "uart",
@@ -42,7 +42,9 @@
         { "id": "mosi", "direction": "output", "routing": "gpio_matrix", "required": false },
         { "id": "miso", "direction": "input", "routing": "gpio_matrix", "required": false },
         { "id": "sclk", "direction": "output", "routing": "gpio_matrix", "required": true },
-        { "id": "cs", "direction": "output", "routing": "gpio_matrix", "required": false }
+        { "id": "cs", "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "wp", "direction": "output", "routing": "gpio_matrix", "required": false },
+        { "id": "hd", "direction": "output", "routing": "gpio_matrix", "required": false }
       ]
     },
     {

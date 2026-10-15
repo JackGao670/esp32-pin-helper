@@ -83,13 +83,20 @@ test("SPI without data lines warns and quad mode requires MOSI+MISO; softwareCs 
   const sclkOnly = addPeripheral(createConfig(), "spi", 2);
   sclkOnly.peripherals!.spi2.signals = { sclk: "GPIO12" };
   const problems = validateGpio(sclkOnly);
-  assert.ok(problems.some(p => /assign at least MOSI or MISO/.test(p.message)));
+  assert.ok(problems.some(p => /assign at least MOSI \(IO0\) or MISO \(IO1\)/.test(p.message)));
   assert.ok(problems.some(p => /CS is unassigned/.test(p.message)));
   const csOk = { ...sclkOnly, peripherals: { spi2: { ...sclkOnly.peripherals!.spi2, softwareCs: true } } };
   assert.ok(!validateGpio(csOk).some(p => /CS is unassigned/.test(p.message)));
   const quadNoBase = addPeripheral(createConfig(), "spi", 2);
-  quadNoBase.peripherals!.spi2.signals = { sclk: "GPIO12", d: "GPIO7", cs: "GPIO10" };
+  quadNoBase.peripherals!.spi2.signals = { sclk: "GPIO12", wp: "GPIO7", cs: "GPIO10" };
   assert.ok(validateGpio(quadNoBase).some(p => /quad mode.*also requires MOSI/.test(p.message)));
+  // Quad mode is a complete four-bit bus: WP and HD come as a pair on top of MOSI/MISO.
+  const hdOnly = addPeripheral(createConfig(), "spi", 2);
+  hdOnly.peripherals!.spi2.signals = { sclk: "GPIO12", mosi: "GPIO11", miso: "GPIO13", cs: "GPIO10", hd: "GPIO7" };
+  assert.ok(validateGpio(hdOnly).some(p => /quad mode needs both WP \(IO2\) and HD \(IO3\); only HD/.test(p.message)));
+  const quadOk = addPeripheral(createConfig(), "spi", 2);
+  quadOk.peripherals!.spi2.signals = { sclk: "GPIO12", mosi: "GPIO11", miso: "GPIO13", cs: "GPIO10", wp: "GPIO6", hd: "GPIO7" };
+  assert.equal(validateGpio(quadOk).length, 0);
 });
 
 test("I2S without dout/din warns and empty ADC warns", () => {
@@ -127,6 +134,26 @@ test("Octal memory pins escalate warnings when any octal pin is reassigned", () 
   const probs = validateGpio(withOctal);
   assert.ok(probs.some(p => /Octal SPI upper data pin \(D4-D7\)/.test(p.message)));
   assert.ok(probs.some(p => /whole D0-D7 bus is reserved/.test(p.message)));
+});
+
+test("options.flashMode/psramMode=octal upgrades memory-pin usage from warning to error", () => {
+  const config = addPeripheral(createConfig("esp32s3"), "spi", 2);
+  config.peripherals!.spi2.signals = { sclk: "GPIO33", mosi: "GPIO27", cs: "GPIO10" };
+  const advisory = validateGpio(config);
+  assert.ok(advisory.some(p => p.gpio === 33 && p.severity === "warning" && /Octal SPI upper data pin \(D4-D7\)/.test(p.message)));
+  assert.ok(advisory.some(p => p.gpio === 27 && p.severity === "warning" && /whole D0-D7 bus is reserved/.test(p.message)));
+  const declared = validateGpio({ ...config, options: { flashMode: "octal" } });
+  assert.ok(declared.some(p => p.gpio === 33 && p.severity === "error" && /reserved by options\.flashMode=octal/.test(p.message)));
+  assert.ok(declared.some(p => p.gpio === 27 && p.severity === "error" && /D0-D7 memory bus reserved by options\.flashMode=octal/.test(p.message)));
+  assert.equal(declared.filter(p => p.severity === "error").length, 2);
+  // An explicit octal declaration reserves the standard memory pads even without an octal pin in use.
+  const psram = validateGpio({
+    ...config,
+    peripherals: { spi2: { ...config.peripherals!.spi2, signals: { sclk: "GPIO12", mosi: "GPIO27", cs: "GPIO10" } } },
+    options: { psramMode: "octal" }
+  });
+  assert.ok(psram.some(p => p.gpio === 27 && p.severity === "error" && /reserved by options\.psramMode=octal/.test(p.message)));
+  assert.equal(psram.filter(p => p.severity === "error").length, 1);
 });
 
 test("ESP32-S3 DVP Camera requires sync/clock + 8-bit data bus; LCD RGB detects partial 16/24-bit busses", () => {

@@ -13,7 +13,7 @@
     "https://github.com/espressif/esp-idf/blob/v5.4/components/soc/esp32c3/include/soc/soc_caps.h (SOC_I2C_NUM 1, SOC_SPI_PERIPH_NUM 2 with only SPI2 reachable from the GPIO matrix, SOC_LEDC_CHANNEL_NUM 6, SOC_ADC_PERIPH_NUM 2 with 5 channels on unit 1 and 1 channel on unit 2, SOC_RMT_CHANNELS_PER_GROUP 4 with 2 TX + 2 RX candidates, SOC_I2S_NUM 1, SOC_TWAI_SUPPORTED 1 and SOC_USB_SERIAL_JTAG_SUPPORTED 1; no SOC_SDMMC_HOST_SUPPORTED and no SOC_LCD_* caps, so this chip has no SD host and no LCD_CAM peripheral)",
     "https://github.com/espressif/esp-idf/blob/v5.4/components/soc/esp32c3/include/soc/adc_channel.h (ADC1 GPIO0-4 = CH0-4, ADC2 GPIO5 = CH0)"
   ],
-  "scope": "Standard UART, HP I2C, standard SPI master, LEDC channels, ADC1-2, RMT channels, I2S master and TWAI; the ESP32-C3 has no LCD_CAM peripheral and no SDMMC host, so no RGB/8080 display and no SD card host are modeled. UART 0-1 and I2C 0 come from the IDF driver docs (SOC_UART_NUM is not defined in the v5.4 soc_caps.h of this chip); SPI0/1 belong to the flash controller, so only SPI2 is offered as a GP-SPI on the GPIO matrix. ADC2 has a single channel on GPIO5 and is shared with Wi-Fi (PWDET arbiter), and the ESP-IDF ADC oneshot driver no longer enables it by default (CONFIG_ADC_ONESHOT_FORCE_USE_ADC2_ON_C3), so treat adc2 as best-effort. RMT TX/RX direction is not enforced (channels 0-1 are TX-only and 2-3 RX-only). usb0 models the fixed USB Serial/JTAG pads (D- = GPIO18, D+ = GPIO19); the D+/D- pair must be routed together. twai0 models the single TWAI (CAN) controller (TX/RX required, BUS-OFF/CLKOUT optional) routed through the GPIO matrix; an external transceiver is required. GPIO11 defaults to VDD_SPI (the flash supply) and can only be used as a plain GPIO when the flash is powered externally.",
+  "scope": "Standard UART, HP I2C, standard SPI master (plus the optional quad-mode WP = IO2 / HD = IO3 lines), LEDC channels, ADC1-2, RMT channels, I2S master and TWAI; the ESP32-C3 has no LCD_CAM peripheral and no SDMMC host, so no RGB/8080 display and no SD card host are modeled. UART 0-1 and I2C 0 come from the IDF driver docs (SOC_UART_NUM is not defined in the v5.4 soc_caps.h of this chip); SPI0/1 belong to the flash controller, so only SPI2 is offered as a GP-SPI on the GPIO matrix. ADC2 has a single channel on GPIO5 and is shared with Wi-Fi (PWDET arbiter), and the ESP-IDF ADC oneshot driver no longer enables it by default (CONFIG_ADC_ONESHOT_FORCE_USE_ADC2_ON_C3), so treat adc2 as best-effort. RMT TX/RX direction is not enforced (channels 0-1 are TX-only and 2-3 RX-only). usb0 models the fixed USB Serial/JTAG pads (D- = GPIO18, D+ = GPIO19); the D+/D- pair must be routed together. twai0 models the single TWAI (CAN) controller (TX/RX required, BUS-OFF/CLKOUT optional) routed through the GPIO matrix; an external transceiver is required. GPIO11 defaults to VDD_SPI (the flash supply) and can only be used as a plain GPIO when the flash is powered externally.",
   "peripherals": [
     { "type": "uart", "instances": [0, 1], "signals": [
       { "id": "tx", "direction": "output", "routing": "gpio_matrix", "required": true },
@@ -29,7 +29,9 @@
       { "id": "mosi", "direction": "output", "routing": "gpio_matrix", "required": false },
       { "id": "miso", "direction": "input", "routing": "gpio_matrix", "required": false },
       { "id": "sclk", "direction": "output", "routing": "gpio_matrix", "required": true },
-      { "id": "cs", "direction": "output", "routing": "gpio_matrix", "required": false }
+      { "id": "cs", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "wp", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "hd", "direction": "output", "routing": "gpio_matrix", "required": false }
     ] },
     { "type": "ledc", "instances": [0, 1, 2, 3, 4, 5], "signals": [
       { "id": "out", "direction": "output", "routing": "gpio_matrix", "required": true }

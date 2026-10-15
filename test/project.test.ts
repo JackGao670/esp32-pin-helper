@@ -57,6 +57,9 @@ test("pinconfig.schema.json v1 covers target chips, gpio functions and P1 periph
   assert.deepEqual(Object.keys(schema.definitions["signals-lpspi"].properties).sort(), ["sclk", "cs", "mosi", "miso"].sort());
   assert.deepEqual(Object.keys(schema.definitions["signals-lpi2s"].properties).sort(), ["bclk", "ws", "din"].sort());
   assert.ok(schema.definitions["signals-adc"].description.includes("ADC1"));
+  assert.deepEqual(Object.keys(schema.definitions["signals-spi"].properties).sort(), ["mosi", "miso", "sclk", "cs", "wp", "hd"].sort());
+  assert.deepEqual(schema.properties.options.properties.flashMode.enum, ["none", "quad", "octal"]);
+  assert.deepEqual(schema.properties.options.properties.psramMode.enum, ["none", "quad", "octal"]);
   // Schema's gpioRef regex should reject malformed values.
   const gpioPattern = new RegExp(schema.definitions.gpioRef.pattern);
   assert.ok(gpioPattern.test("GPIO0"));

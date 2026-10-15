@@ -368,6 +368,24 @@
         }
       }
     },
+    "options": {
+      "type": "object",
+      "title": "Target memory options",
+      "description": "Optional explicit declaration of the module's internal flash / PSRAM bus. Declaring 'octal' turns the Octal SPI pads into hard reservations; when the field is absent the planner keeps its advisory 'usually used by Flash/PSRAM' hints.",
+      "additionalProperties": true,
+      "properties": {
+        "flashMode": {
+          "type": "string",
+          "enum": ["none", "quad", "octal"],
+          "description": "Internal flash bus width. 'quad' = D0-D3 on the standard memory pads; 'octal' = the whole D0-D7 bus (including the Octal upper data lanes) is reserved; 'none' = no in-package flash."
+        },
+        "psramMode": {
+          "type": "string",
+          "enum": ["none", "quad", "octal"],
+          "description": "Internal PSRAM bus width; same 'none' / 'quad' / 'octal' meaning as flashMode. Either field set to 'octal' reserves the Octal SPI pads."
+        }
+      }
+    },
     "vendor": {
       "type": "object",
       "title": "Vendor / user metadata",
@@ -611,14 +629,12 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "mosi": { "$ref": "#/definitions/gpioRef", "description": "SPI MOSI / IO0 (output)." },
-        "miso": { "$ref": "#/definitions/gpioRef", "description": "SPI MISO / IO1 (input)." },
+        "mosi": { "$ref": "#/definitions/gpioRef", "description": "SPI MOSI / IO0 (named D in quad mode). Output." },
+        "miso": { "$ref": "#/definitions/gpioRef", "description": "SPI MISO / IO1 (named Q in quad mode). Input." },
         "sclk": { "$ref": "#/definitions/gpioRef", "description": "SPI SCLK (output, required)." },
         "cs":   { "$ref": "#/definitions/gpioRef", "description": "SPI CS (output, required unless softwareCs=true)." },
-        "d":    { "$ref": "#/definitions/gpioRef", "description": "SPI IO3 / D (quad/octal data line)." },
-        "q":    { "$ref": "#/definitions/gpioRef", "description": "SPI IO1 / Q (quad/octal data line)." },
-        "wp":   { "$ref": "#/definitions/gpioRef", "description": "SPI IO2 / WP (write protect)." },
-        "hd":   { "$ref": "#/definitions/gpioRef", "description": "SPI IO3 / HD (hold, sometimes renamed to d or q by boards)." }
+        "wp":   { "$ref": "#/definitions/gpioRef", "description": "SPI WP / IO2. Output; quad mode only — assign together with hd." },
+        "hd":   { "$ref": "#/definitions/gpioRef", "description": "SPI HD / IO3. Output; quad mode only — assign together with wp." }
       }
     },
     "signals-ledc": {

@@ -11,7 +11,7 @@
     "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32c5/api-reference/peripherals/i2s.html",
     "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32c5/api-reference/peripherals/usb_serial_jtag.html"
   ],
-  "scope": "Standard UART (2 HP controllers), HP I2C (1 controller), standard SPI master (GPSPI2 only; SPI0/SPI1 drive the flash/PSRAM and are not exposed), LEDC channels (6 channels, low-speed only), ADC1 (single 6-channel unit, no ADC2), RMT channels and I2S master only. LP controllers (LP UART / LP I2C) are excluded. usb0 models the fixed USB Serial/JTAG pads (D- = GPIO13, D+ = GPIO14); the D+/D- pair must be routed together. The ESP32-C5 has no USB OTG, no SDMMC host and no ADC2, and TWAI is not enableable in ESP-IDF v5.4, so none of those are modelled. RMT channels 0-1 are TX-only and 2-3 are RX-only.",
+  "scope": "Standard UART (2 HP controllers), HP I2C (1 controller), standard SPI master (GPSPI2 only; SPI0/SPI1 drive the flash/PSRAM and are not exposed; the optional quad-mode WP = IO2 / HD = IO3 lines are taken from the ESP-IDF v6.1 gpio_sig_map.h header because the ESP32-C5 is not part of v5.4), LEDC channels (6 channels, low-speed only), ADC1 (single 6-channel unit, no ADC2), RMT channels and I2S master only. LP controllers (LP UART / LP I2C) are excluded. usb0 models the fixed USB Serial/JTAG pads (D- = GPIO13, D+ = GPIO14); the D+/D- pair must be routed together. The ESP32-C5 has no USB OTG, no SDMMC host and no ADC2, and TWAI is not enableable in ESP-IDF v5.4, so none of those are modelled. RMT channels 0-1 are TX-only and 2-3 are RX-only.",
   "peripherals": [
     { "type": "uart", "instances": [0, 1], "signals": [
       { "id": "tx", "direction": "output", "routing": "gpio_matrix", "required": true },
@@ -27,7 +27,9 @@
       { "id": "mosi", "direction": "output", "routing": "gpio_matrix", "required": false },
       { "id": "miso", "direction": "input", "routing": "gpio_matrix", "required": false },
       { "id": "sclk", "direction": "output", "routing": "gpio_matrix", "required": true },
-      { "id": "cs", "direction": "output", "routing": "gpio_matrix", "required": false }
+      { "id": "cs", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "wp", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "hd", "direction": "output", "routing": "gpio_matrix", "required": false }
     ] },
     { "type": "ledc", "instances": [0, 1, 2, 3, 4, 5], "signals": [
       { "id": "out", "direction": "output", "routing": "gpio_matrix", "required": true }

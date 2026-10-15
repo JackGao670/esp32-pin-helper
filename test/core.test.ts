@@ -36,6 +36,14 @@ test("set and clear assignment without duplicates", () => {
   assert.deepEqual(setPin(second, 17, null).pins, []);
 });
 
+test("explicit memory options round-trip and reject unknown modes", () => {
+  const config = parseConfig('{"version":1,"target":{"chip":"esp32s3"},"pins":[],"options":{"flashMode":"octal","psramMode":"none"}}');
+  assert.equal(config.options?.flashMode, "octal");
+  assert.deepEqual(parseConfig(serializeConfig(config)).options, { flashMode: "octal", psramMode: "none" });
+  assert.throws(() => parseConfig('{"version":1,"target":{"chip":"esp32s3"},"pins":[],"options":{"flashMode":"triple"}}'), /options\.flashMode/);
+  assert.throws(() => parseConfig('{"version":1,"target":{"chip":"esp32s3"},"pins":[],"options":[1]}'), /options must be an object/);
+});
+
 test("malformed models and unsupported versions are rejected", () => {
   for (const text of ["null", "[]", '{"version":2}', '{"version":1,"target":{"chip":"esp32s3"},"pins":[{"gpio":-1,"function":"GPIO_INPUT"}]}',
     '{"version":1,"target":{"chip":"esp32s3"},"pins":[],"peripherals":{"uart":{"type":"uart","instance":0,"signals":{"tx":17}}}}']) {
