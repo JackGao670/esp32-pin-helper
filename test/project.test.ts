@@ -99,13 +99,13 @@ test("schema root allOf constrains per-chip owner names and per-type instance en
   assert.deepEqual(instEnumForType("esp32s3", "spi"), [2, 3]);
   assert.deepEqual(instEnumForType("esp32s3", "ledc"), [0, 1, 2, 3, 4, 5, 6, 7]);
 
-  // ESP32-P4: uart 0-4, i2s 0-2, adc 1 only.
+  // ESP32-P4: uart 0-4, i2s 0-2, adc 1+2 (ADC1 GPIO16-23, ADC2 GPIO49-54).
   assert.equal(owners("esp32p4").has("uart4"), true);
   assert.equal(owners("esp32p4").has("uart5"), false);
-  assert.equal(owners("esp32p4").has("adc2"), false);
+  assert.equal(owners("esp32p4").has("adc2"), true);
   assert.deepEqual(instEnumForType("esp32p4", "uart"), [0, 1, 2, 3, 4]);
   assert.deepEqual(instEnumForType("esp32p4", "i2s"), [0, 1, 2]);
-  assert.deepEqual(instEnumForType("esp32p4", "adc"), [1]);
+  assert.deepEqual(instEnumForType("esp32p4", "adc"), [1, 2]);
   // P4 dedicated camera/lcd owners + camera_mipi/lcd_mipi new types
   assert.equal(owners("esp32p4").has("camera0"), true);
   assert.equal(owners("esp32p4").has("camera_mipi0"), true);

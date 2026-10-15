@@ -117,7 +117,8 @@ test("ADC units map to their documented GPIOs per chip", () => {
   assert.deepEqual(candidates(c6, "esp32c6", 1), [0, 1, 2, 3, 4, 5, 6]);
   assert.equal(definition("adc", 2, "esp32c6"), undefined);
   const p4 = definition("adc", 1, "esp32p4")!.signals[0];
-  assert.deepEqual(candidates(p4, "esp32p4", 1), [16, 17, 18, 19, 20, 21, 22, 23, 49, 50, 51, 52, 53, 54]);
+  assert.deepEqual(candidates(p4, "esp32p4", 1), [16, 17, 18, 19, 20, 21, 22, 23]);
+  assert.deepEqual(candidates(p4, "esp32p4", 2), [49, 50, 51, 52, 53, 54]);
 });
 
 test("ADC, LEDC and I2S assignments validate; ADC pins outside the unit are errors", () => {

@@ -48,6 +48,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   setting description are localised through `package.nls.json` / `package.nls.zh-cn.json`, and validator
   diagnostics intentionally stay English so tooling and existing tests keep a stable contract.
 
+### Fixed
+- **ESP32-P4 ADC units** (§4.1): the P4 database now models **two** ADC units — ADC1 on GPIO16-23 and
+  ADC2 on GPIO49-54 — matching `soc/esp32p4/adc_channel.h` and the datasheet Analog Functions table.
+  Previously all 14 analog pins were folded into ADC1, so an `adc2` channel could not be declared and a
+  GPIO49-54 assignment on `adc1` was accepted even though the ESP-IDF driver rejects it. (The ESP-IDF GPIO
+  summary page labels GPIO49-54 as `ADC1_CH8-13`, contradicting the driver header; the header/datasheet
+  mapping is used here.)
+
 ## [0.0.3] - 2026-10-14
 
 ### Added

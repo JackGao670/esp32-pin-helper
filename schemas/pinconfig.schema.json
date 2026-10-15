@@ -92,13 +92,13 @@
                 "i2c0","i2c1",
                 "spi2",
                 "ledc0","ledc1","ledc2","ledc3","ledc4","ledc5","ledc6","ledc7",
-                "adc1",
+                "adc1","adc2",
                 "rmt0","rmt1","rmt2","rmt3","rmt4","rmt5","rmt6","rmt7",
                 "i2s0","i2s1","i2s2",
                 "camera0","camera_mipi0","lcd0","lcd_mcu0","lcd_mipi0","usb0",
                 "twai0","twai1","twai2","sdmmc1"
               ],
-              "description": "ESP32-P4 (IDF v5.4): UART 0-4, I2C 0-1, SPI 2 only, LEDC 0-7, ADC 1 only, RMT 0-7, I2S 0-2, DVP Camera 0, MIPI CSI-2 Camera 0 (2 lane), RGB LCD 0 (up to 24-bit), LCD_MCU 0 (8080/i80 8-16-bit), MIPI DSI LCD 0 (up to 4 lane), USB 0, TWAI 0-2, SDMMC 1 only (slot 1 GPIOMatrix-routed)."
+              "description": "ESP32-P4 (IDF v5.4): UART 0-4, I2C 0-1, SPI 2 only, LEDC 0-7, ADC 1+2 (ADC1 GPIO16-23, ADC2 GPIO49-54), RMT 0-7, I2S 0-2, DVP Camera 0, MIPI CSI-2 Camera 0 (2 lane), RGB LCD 0 (up to 24-bit), LCD_MCU 0 (8080/i80 8-16-bit), MIPI DSI LCD 0 (up to 4 lane), USB 0, TWAI 0-2, SDMMC 1 only (slot 1 GPIOMatrix-routed)."
             },
             "additionalProperties": {
               "allOf": [
@@ -106,7 +106,7 @@
                 { "if": { "properties": { "type": { "const": "i2c"  }}}, "then": { "properties": { "instance": { "enum": [0,1]         }}}},
                 { "if": { "properties": { "type": { "const": "spi"  }}}, "then": { "properties": { "instance": { "enum": [2]             }}}},
                 { "if": { "properties": { "type": { "const": "ledc" }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3,4,5,6,7] }}}},
-                { "if": { "properties": { "type": { "const": "adc"  }}}, "then": { "properties": { "instance": { "enum": [1]             }}}},
+                { "if": { "properties": { "type": { "const": "adc"  }}}, "then": { "properties": { "instance": { "enum": [1,2]           }}}},
                 { "if": { "properties": { "type": { "const": "rmt"  }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3,4,5,6,7] }}}},
                 { "if": { "properties": { "type": { "const": "i2s"  }}}, "then": { "properties": { "instance": { "enum": [0,1,2]         }}}},
                 { "if": { "properties": { "type": { "const": "camera"       }}}, "then": { "properties": { "instance": { "enum": [0] }}}},
