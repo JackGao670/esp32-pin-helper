@@ -1,0 +1,25 @@
+{
+  "id": "esp32",
+  "name": "ESP32",
+  "architecture": "Xtensa",
+  "databaseVersion": "0.1.0",
+  "scope": "Logical GPIO, standard UART/I2C/SPI, LEDC channels, ADC1-2, RMT channels, I2S and TWAI; the SDMMC host, Ethernet MAC, DAC, touch sensor and the I2S-based LCD/camera paths are not modeled, and package variants are not fully checked. GPIO20 and GPIO24/28-31 are not bonded out on common packages, so they are excluded.",
+  "source": {
+    "document": "ESP-IDF GPIO & RTC GPIO",
+    "version": "v5.4",
+    "url": "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32/api-reference/peripherals/gpio.html"
+  },
+  "gpioNumbers": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33, 34, 35, 36, 37, 38, 39],
+  "defaultCapabilities": { "input": true, "output": true, "openDrain": true, "gpioMatrix": true },
+  "inputOnlyPins": [34, 35, 36, 37, 38, 39],
+  "strapping": [0, 2, 5, 12, 15],
+  "rtc": [0, 2, 4, 12, 13, 14, 15, 25, 26, 27, 32, 33, 34, 35, 36, 37, 38, 39],
+  "analog": [0, 2, 4, 12, 13, 14, 15, 25, 26, 27, 32, 33, 34, 35, 36, 37, 38, 39],
+  "adcUnits": { "1": [36, 37, 38, 39, 32, 33, 34, 35], "2": [4, 0, 2, 15, 13, 12, 14, 27, 25, 26] },
+  "adcWifiSharedUnits": [2],
+  "memoryPins": [6, 7, 8, 9, 10, 11, 16, 17],
+  "octalMemoryPins": [],
+  "usbJtag": [],
+  "variantPins": [],
+  "functions": ["GPIO_INPUT", "GPIO_OUTPUT", "GPIO_OPEN_DRAIN"]
+}

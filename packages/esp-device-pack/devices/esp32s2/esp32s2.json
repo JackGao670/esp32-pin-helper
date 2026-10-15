@@ -1,0 +1,26 @@
+{
+  "id": "esp32s2",
+  "name": "ESP32-S2",
+  "architecture": "Xtensa",
+  "databaseVersion": "0.1.0",
+  "scope": "Logical GPIO, standard UART/I2C/SPI, LEDC channels, ADC1-2, RMT channels, I2S, USB OTG and TWAI; the I2S-based LCD/camera paths, DAC and touch sensor are not modeled, and the ESP32-S2 has no SDMMC host, no Bluetooth and no Ethernet MAC. Only the quad SPI flash/PSRAM bus on GPIO26-32 is modeled as the baseline memory bus.",
+  "source": {
+    "document": "ESP-IDF GPIO & RTC GPIO",
+    "version": "v5.4",
+    "url": "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32s2/api-reference/peripherals/gpio.html"
+  },
+  "gpioNumbers": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46],
+  "defaultCapabilities": { "input": true, "output": true, "openDrain": true, "gpioMatrix": true },
+  "inputOnlyPins": [46],
+  "strapping": [0, 45, 46],
+  "rtc": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+  "analog": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+  "adcUnits": { "1": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "2": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20] },
+  "adcWifiSharedUnits": [2],
+  "memoryPins": [26, 27, 28, 29, 30, 31, 32],
+  "octalMemoryPins": [33, 34, 35, 36, 37],
+  "usbJtag": [],
+  "usbOtgPins": [19, 20],
+  "variantPins": [],
+  "functions": ["GPIO_INPUT", "GPIO_OUTPUT", "GPIO_OPEN_DRAIN"]
+}

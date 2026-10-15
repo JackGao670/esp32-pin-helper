@@ -441,7 +441,7 @@ export function validateGpio(config: PinConfigDocument,
   const chip = config.target.chip as Parameters<typeof resolveBoardFromSettings>[1];
   const board = resolveBoardFromSettings(settings.board,
     // resolveBoardFromSettings expects TargetChip; keep string union guard to not break odd imported docs
-    (chip === "esp32s3" || chip === "esp32c6" || chip === "esp32p4" || chip === "esp32c3" || chip === "esp32c2" ? chip : DEFAULT_SETTINGS.defaultTarget));
+    (chip === "esp32s3" || chip === "esp32c6" || chip === "esp32p4" || chip === "esp32c3" || chip === "esp32c2" || chip === "esp32" || chip === "esp32s2" ? chip : DEFAULT_SETTINGS.defaultTarget));
   const ctx: ValidationContext = { settings, board };
   return rules.flatMap(rule => rule.check(config, ctx));
 }

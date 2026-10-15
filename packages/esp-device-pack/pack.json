@@ -8,7 +8,9 @@
     { "chip": "esp32c6", "device": "devices/esp32c6/esp32c6.json", "peripherals": "devices/esp32c6/peripherals.json" },
     { "chip": "esp32p4", "device": "devices/esp32p4/esp32p4.json", "peripherals": "devices/esp32p4/peripherals.json" },
     { "chip": "esp32c3", "device": "devices/esp32c3/esp32c3.json", "peripherals": "devices/esp32c3/peripherals.json" },
-    { "chip": "esp32c2", "device": "devices/esp32c2/esp32c2.json", "peripherals": "devices/esp32c2/peripherals.json" }
+    { "chip": "esp32c2", "device": "devices/esp32c2/esp32c2.json", "peripherals": "devices/esp32c2/peripherals.json" },
+    { "chip": "esp32", "device": "devices/esp32/esp32.json", "peripherals": "devices/esp32/peripherals.json" },
+    { "chip": "esp32s2", "device": "devices/esp32s2/esp32s2.json", "peripherals": "devices/esp32s2/peripherals.json" }
   ],
   "boards": [
     { "vendor": "espressif", "id": "esp32-s3-devkitc-1", "path": "boards/espressif/esp32-s3-devkitc-1.json" },

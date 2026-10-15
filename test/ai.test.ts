@@ -160,7 +160,7 @@ test("deriveRepairContext treats plain pins as occupied", () => {
 });
 
 test("prompt helpers describe the chip facts the model must respect", () => {
-  assert.deepEqual(supportedChips(), ["esp32s3", "esp32c6", "esp32p4", "esp32c3", "esp32c2"]);
+  assert.deepEqual(supportedChips(), ["esp32s3", "esp32c6", "esp32p4", "esp32c3", "esp32c2", "esp32", "esp32s2"]);
 
   const catalogue = buildCatalogue("esp32s3");
   const uart = catalogue.find(entry => entry.type === "uart")!;
@@ -182,6 +182,8 @@ test("detectChip reads the target from a natural-language request", () => {
   assert.equal(detectChip("wire an I2C bus on esp32c6"), "esp32c6");
   assert.equal(detectChip("a small esp32-c3 project"), "esp32c3");
   assert.equal(detectChip("use an ESP32-C2 module"), "esp32c2");
+  assert.equal(detectChip("a classic ESP32 devkit"), "esp32");
+  assert.equal(detectChip("use an ESP32-S2 board"), "esp32s2");
   assert.equal(detectChip("configure a camera"), undefined);
   assert.equal(detectChip(""), undefined);
 });

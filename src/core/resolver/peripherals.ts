@@ -3,6 +3,8 @@ import c6 from "esp-device-pack/devices/esp32c6/peripherals.json";
 import p4 from "esp-device-pack/devices/esp32p4/peripherals.json";
 import c3 from "esp-device-pack/devices/esp32c3/peripherals.json";
 import c2 from "esp-device-pack/devices/esp32c2/peripherals.json";
+import esp32 from "esp-device-pack/devices/esp32/peripherals.json";
+import s2 from "esp-device-pack/devices/esp32s2/peripherals.json";
 import { getDevice, type PinDefinition } from "../../database/loader";
 
 export interface SignalDefinition {
@@ -21,7 +23,7 @@ export interface PeripheralDefinition {
 
 export const peripherals = data.peripherals as PeripheralDefinition[];
 export function getPeripherals(chip: string): PeripheralDefinition[] {
-  const packs = [data, c6, p4, c3, c2];
+  const packs = [data, c6, p4, c3, c2, esp32, s2];
   return (packs.find(pack => pack.chip === chip)?.peripherals ?? []) as PeripheralDefinition[];
 }
 

@@ -190,6 +190,75 @@
           }
         }
       }
+    },
+    {
+      "if": { "properties": { "target": { "properties": { "chip": { "const": "esp32" } }, "required": ["chip"] } } },
+      "then": {
+        "properties": {
+          "peripherals": {
+            "propertyNames": {
+              "enum": [
+                "uart0","uart1","uart2",
+                "i2c0","i2c1",
+                "spi2","spi3",
+                "ledc0","ledc1","ledc2","ledc3","ledc4","ledc5","ledc6","ledc7","ledc8","ledc9","ledc10","ledc11","ledc12","ledc13","ledc14","ledc15",
+                "adc1","adc2",
+                "rmt0","rmt1","rmt2","rmt3","rmt4","rmt5","rmt6","rmt7",
+                "i2s0","i2s1",
+                "twai0"
+              ],
+              "description": "ESP32 (IDF v5.4): UART 0-2, I2C 0-1, SPI 2-3 (HSPI/VSPI; SPI0/1 are the flash controllers), LEDC 0-15, ADC1 (GPIO32-39) + ADC2 (shared with Wi-Fi), RMT 0-7 (every channel is TX or RX capable), I2S 0-1 and TWAI 0. The ESP32 has no USB peripheral; the SDMMC host, Ethernet MAC, DAC and touch sensor are not modeled."
+            },
+            "additionalProperties": {
+              "allOf": [
+                { "if": { "properties": { "type": { "const": "uart" }}}, "then": { "properties": { "instance": { "enum": [0,1,2]   }}}},
+                { "if": { "properties": { "type": { "const": "i2c"  }}}, "then": { "properties": { "instance": { "enum": [0,1]     }}}},
+                { "if": { "properties": { "type": { "const": "spi"  }}}, "then": { "properties": { "instance": { "enum": [2,3]     }}}},
+                { "if": { "properties": { "type": { "const": "ledc" }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15] }}}},
+                { "if": { "properties": { "type": { "const": "adc"  }}}, "then": { "properties": { "instance": { "enum": [1,2]     }}}},
+                { "if": { "properties": { "type": { "const": "rmt"  }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3,4,5,6,7] }}}},
+                { "if": { "properties": { "type": { "const": "i2s"  }}}, "then": { "properties": { "instance": { "enum": [0,1]     }}}},
+                { "if": { "properties": { "type": { "const": "twai" }}}, "then": { "properties": { "instance": { "enum": [0]       }}}}
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "target": { "properties": { "chip": { "const": "esp32s2" } }, "required": ["chip"] } } },
+      "then": {
+        "properties": {
+          "peripherals": {
+            "propertyNames": {
+              "enum": [
+                "uart0","uart1",
+                "i2c0","i2c1",
+                "spi2","spi3",
+                "ledc0","ledc1","ledc2","ledc3","ledc4","ledc5","ledc6","ledc7",
+                "adc1","adc2",
+                "rmt0","rmt1","rmt2","rmt3",
+                "i2s0","usb0",
+                "twai0"
+              ],
+              "description": "ESP32-S2 (IDF v5.4): UART 0-1, I2C 0-1, SPI 2-3 (FSPI/SPI3; SPI3 is single-line only), LEDC 0-7 (low-speed only), ADC1 + ADC2 (shared with Wi-Fi), RMT 0-3 (every channel is TX or RX capable), I2S 0, USB 0 (fixed USB OTG pads) and TWAI 0. The ESP32-S2 has no SDMMC host, no Bluetooth and no Ethernet MAC."
+            },
+            "additionalProperties": {
+              "allOf": [
+                { "if": { "properties": { "type": { "const": "uart" }}}, "then": { "properties": { "instance": { "enum": [0,1]     }}}},
+                { "if": { "properties": { "type": { "const": "i2c"  }}}, "then": { "properties": { "instance": { "enum": [0,1]     }}}},
+                { "if": { "properties": { "type": { "const": "spi"  }}}, "then": { "properties": { "instance": { "enum": [2,3]     }}}},
+                { "if": { "properties": { "type": { "const": "ledc" }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3,4,5,6,7] }}}},
+                { "if": { "properties": { "type": { "const": "adc"  }}}, "then": { "properties": { "instance": { "enum": [1,2]     }}}},
+                { "if": { "properties": { "type": { "const": "rmt"  }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3] }}}},
+                { "if": { "properties": { "type": { "const": "i2s"  }}}, "then": { "properties": { "instance": { "enum": [0]       }}}},
+                { "if": { "properties": { "type": { "const": "usb"  }}}, "then": { "properties": { "instance": { "enum": [0]       }}}},
+                { "if": { "properties": { "type": { "const": "twai" }}}, "then": { "properties": { "instance": { "enum": [0]       }}}}
+              ]
+            }
+          }
+        }
+      }
     }
   ],
   "properties": {
@@ -206,14 +275,16 @@
       "properties": {
         "chip": {
           "type": "string",
-          "enum": ["esp32s3", "esp32c6", "esp32p4", "esp32c3", "esp32c2"],
+          "enum": ["esp32s3", "esp32c6", "esp32p4", "esp32c3", "esp32c2", "esp32", "esp32s2"],
           "description": "Target chip identifier used to route hardware rules.",
           "x-doc-enum": [
             "ESP32-S3 (v5.3 GPIO + UART/I2C/SPI/LEDC/ADC/RMT/I2S)",
             "ESP32-C6 (v5.3 single ADC1, RMT 4 ch, I2S 0 only)",
             "ESP32-P4 (v5.4 ADC1 GPIO16-23/49-54 only, RMT 8 ch, I2S 0-2)",
             "ESP32-C3 (v5.4 22 GPIO, ADC1 5 ch + ADC2 1 ch, RMT 4 ch TX 0-1/RX 2-3, I2S 0 only, 1 TWAI)",
-            "ESP32-C2 (v5.4 21 GPIO with 14 usable on SiP-flash parts, ADC1 only, no RMT/I2S/TWAI/USB, SPI 2 only)"
+            "ESP32-C2 (v5.4 21 GPIO with 14 usable on SiP-flash parts, ADC1 only, no RMT/I2S/TWAI/USB, SPI 2 only)",
+            "ESP32 (v5.4 34 bonded GPIO with 34-39 input-only, UART 0-2, I2C 0-1, SPI 2-3, LEDC 16 ch, RMT 8 ch, I2S 0-1, 1 TWAI, no USB)",
+            "ESP32-S2 (v5.4 43 GPIO with 46 input-only, UART 0-1, I2C 0-1, SPI 2-3, LEDC 8 ch, RMT 4 ch, I2S 0, USB OTG, 1 TWAI, no SD host/BT)"
           ]
         },
         "package": {

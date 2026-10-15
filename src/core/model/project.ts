@@ -1,6 +1,6 @@
 import { defaultTranslate, type Translate } from "../../i18n/messages";
 
-export type TargetChip = "esp32s3" | "esp32c6" | "esp32p4" | "esp32c3" | "esp32c2";
+export type TargetChip = "esp32s3" | "esp32c6" | "esp32p4" | "esp32c3" | "esp32c2" | "esp32" | "esp32s2";
 
 export function parseSdkconfigTarget(text: string): string | undefined {
   const matches = [...text.replace(/^\uFEFF/, "").matchAll(/^\s*CONFIG_IDF_TARGET\s*=\s*"([a-z0-9]+)"\s*(?:#.*)?$/gm)];

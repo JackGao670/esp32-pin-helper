@@ -1,0 +1,55 @@
+{
+  "databaseVersion": "0.1.0",
+  "chip": "esp32",
+  "sources": [
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32/api-reference/peripherals/uart.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32/api-reference/peripherals/i2c.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32/api-reference/peripherals/spi_master.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32/api-reference/peripherals/ledc.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32/api-reference/peripherals/adc_oneshot.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32/api-reference/peripherals/rmt.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32/api-reference/peripherals/i2s.html",
+    "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32/api-reference/peripherals/twai.html"
+  ],
+  "scope": "UART full duplex (3 controllers), I2C (2 controllers), standard SPI master (HSPI/SPI2 and VSPI/SPI3; the SPI0/SPI1 flash controllers are not exposed), LEDC channels (16 channels across high-speed and low-speed groups), ADC1/ADC2, RMT channels, I2S (I2S0/I2S1) and TWAI. Every RMT channel can be configured as either TX or RX, so RMT direction is not enforced. The ESP32 has no USB peripheral (no USB OTG or USB Serial/JTAG). The SDMMC host, Ethernet MAC, DAC, touch sensor and the I2S-based Intel 8080 LCD / DVP camera paths are not modeled. adc2 shares hardware with Wi-Fi.",
+  "peripherals": [
+    { "type": "uart", "instances": [0, 1, 2], "signals": [
+      { "id": "tx", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "rx", "direction": "input", "routing": "gpio_matrix", "required": true },
+      { "id": "rts", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "cts", "direction": "input", "routing": "gpio_matrix", "required": false }
+    ] },
+    { "type": "i2c", "instances": [0, 1], "signals": [
+      { "id": "sda", "direction": "bidirectional", "routing": "gpio_matrix", "required": true, "openDrain": true },
+      { "id": "scl", "direction": "bidirectional", "routing": "gpio_matrix", "required": true, "openDrain": true }
+    ] },
+    { "type": "spi", "instances": [2, 3], "signals": [
+      { "id": "mosi", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "miso", "direction": "input", "routing": "gpio_matrix", "required": false },
+      { "id": "sclk", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "cs", "direction": "output", "routing": "gpio_matrix", "required": false }
+    ] },
+    { "type": "ledc", "instances": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "signals": [
+      { "id": "out", "direction": "output", "routing": "gpio_matrix", "required": true }
+    ] },
+    { "type": "adc", "instances": [1, 2], "signals": [
+      { "id": "in", "direction": "input", "routing": "analog", "required": true }
+    ] },
+    { "type": "rmt", "instances": [0, 1, 2, 3, 4, 5, 6, 7], "signals": [
+      { "id": "sig", "direction": "bidirectional", "routing": "gpio_matrix", "required": true }
+    ] },
+    { "type": "i2s", "instances": [0, 1], "signals": [
+      { "id": "bclk", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "ws", "direction": "output", "routing": "gpio_matrix", "required": true },
+      { "id": "dout", "direction": "output", "routing": "gpio_matrix", "required": false },
+      { "id": "din", "direction": "input", "routing": "gpio_matrix", "required": false },
+      { "id": "mclk", "direction": "output", "routing": "gpio_matrix", "required": false }
+    ] },
+    { "type": "twai", "instances": [0], "signals": [
+      { "id": "tx", "direction": "output", "routing": "gpio_matrix", "required": true, "description": "TWAI transmit line to the external CAN transceiver (dominant bit = low)." },
+      { "id": "rx", "direction": "input", "routing": "gpio_matrix", "required": true, "description": "TWAI receive line from the external CAN transceiver; the transceiver must loop TX back to RX." },
+      { "id": "bus_off", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "BUS-OFF status output (optional)." },
+      { "id": "clkout", "direction": "output", "routing": "gpio_matrix", "required": false, "description": "TWAI bit-clock output for external use (optional)." }
+    ] }
+  ]
+}

@@ -71,6 +71,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The `TargetChip` union, the settings guard, the schema (`chip` enum plus per-chip owner/instance rules),
   the RMT TX/RX bank rule and the AI chip detector were extended accordingly. No reference boards are
   added yet for these two chips.
+- **ESP32 / ESP32-S2 chip data** (§4.1): the two original Xtensa targets join the database. The **classic
+  ESP32** contributes its 34 bonded GPIOs (0-19, 21-23, 25-27, 32-39; GPIO20 and GPIO24/28-31 are not bonded
+  out), the six **input-only ADC1 pads GPIO34-39** (no output / open-drain driver), strapping GPIO0/2/5/12/15,
+  RTC on 18 pads, the 8-channel ADC1 (GPIO36/37/38/39/32/33/34/35) and 10-channel ADC2 (GPIO4/0/2/15/13/12/14/27/25/26,
+  shared with Wi-Fi), flash GPIO6-11 plus the WROVER PSRAM pads GPIO16/17, UART 0-2, I2C 0-1, HSPI/VSPI
+  (SPI2/SPI3), I2S 0-1, 16 LEDC channels, 8 RMT channels and a single **TWAI** controller — it has **no USB**
+  peripheral. The **ESP32-S2** contributes its 43 GPIOs (0-21, 26-46; 22-25 do not exist), the single
+  **input-only pad GPIO46**, strapping GPIO0/45/46, RTC on GPIO0-21, ADC1 GPIO1-10 and ADC2 GPIO11-20
+  (both Wi-Fi-shared), quad flash/PSRAM on GPIO26-32 with the octal variant adding GPIO33-37, UART 0-1,
+  I2C 0-1, SPI2/SPI3 (SPI3 single-line), I2S 0, 8 low-speed LEDC channels, 4 RMT channels, a single **TWAI**
+  controller and the fixed **USB OTG** pads (D- = GPIO19, D+ = GPIO20). A new `usbOtgPins` device field
+  models the OTG pads separately from the USB Serial/JTAG pads (which the S2 does not have), and the
+  input-only restriction text was generalised (it no longer mentions the ESP32-S3-specific MTDO strapping).
+  The `TargetChip` union, the settings guard, the schema (`chip` enum plus per-chip owner/instance rules)
+  and the AI chip detector were extended accordingly; RMT direction is intentionally not enforced on these
+  two chips because every RMT channel can be configured as either TX or RX. No reference boards are added.
 
 ### Fixed
 - **ESP32-P4 ADC units** (§4.1): the P4 database now models **two** ADC units — ADC1 on GPIO16-23 and

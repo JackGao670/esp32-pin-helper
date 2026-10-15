@@ -33,7 +33,7 @@ test("pinconfig.schema.json v1 covers target chips, gpio functions and P1 periph
   const schema = JSON.parse(readFileSync(resolve(repoRoot, "schemas", "pinconfig.schema.json"), "utf8"));
   assert.equal(schema.$schema, "http://json-schema.org/draft-07/schema#");
   assert.equal(schema.properties.version.const, 1);
-  assert.deepEqual(schema.properties.target.properties.chip.enum, ["esp32s3", "esp32c6", "esp32p4", "esp32c3", "esp32c2"]);
+  assert.deepEqual(schema.properties.target.properties.chip.enum, ["esp32s3", "esp32c6", "esp32p4", "esp32c3", "esp32c2", "esp32", "esp32s2"]);
   assert.deepEqual(schema.properties.pins.items.properties.function.enum, ["GPIO_INPUT", "GPIO_OUTPUT", "GPIO_OPEN_DRAIN"]);
   const peripheral = schema.definitions.peripheral;
   assert.deepEqual(peripheral.properties.type.enum, ["uart", "i2c", "spi", "ledc", "adc", "rmt", "i2s", "camera", "lcd", "lcd_mcu", "camera_mipi", "lcd_mipi", "usb", "twai", "sdmmc", "lpuart", "lpi2c", "lpspi", "lpi2s"]);
@@ -79,7 +79,7 @@ test("pinconfig.schema.json v1 covers target chips, gpio functions and P1 periph
 test("schema root allOf constrains per-chip owner names and per-type instance enums", () => {
   const schema = JSON.parse(readFileSync(resolve(repoRoot, "schemas", "pinconfig.schema.json"), "utf8"));
   assert.ok(Array.isArray(schema.allOf), "schema root should declare per-chip allOf rules");
-  assert.equal(schema.allOf.length, 5, "one rule per target chip (s3 / c6 / p4 / c3 / c2)");
+  assert.equal(schema.allOf.length, 7, "one rule per target chip (s3 / c6 / p4 / c3 / c2 / esp32 / s2)");
   // Utility: pick the chip-rule by const value.
   const chipRule = (chip: string) => schema.allOf
     .find((rule: any) => rule?.if?.properties?.target?.properties?.chip?.const === chip) as any;
@@ -247,4 +247,55 @@ test("schema root allOf constrains per-chip owner names and per-type instance en
   assert.equal(instEnumForType("esp32c2", "rmt"), undefined);
   assert.equal(instEnumForType("esp32c2", "i2s"), undefined);
   assert.equal(instEnumForType("esp32c2", "twai"), undefined);
+
+  // ESP32 (classic): uart 0-2, i2c 0-1, spi 2-3, ledc 0-15, adc 1+2, rmt 0-7, i2s 0-1, 1 TWAI, no USB.
+  assert.equal(owners("esp32").has("uart2"), true);
+  assert.equal(owners("esp32").has("uart3"), false);
+  assert.equal(owners("esp32").has("i2c1"), true);
+  assert.equal(owners("esp32").has("i2c2"), false);
+  assert.equal(owners("esp32").has("spi2"), true);
+  assert.equal(owners("esp32").has("spi3"), true);
+  assert.equal(owners("esp32").has("spi4"), false);
+  assert.equal(owners("esp32").has("adc2"), true);
+  assert.equal(owners("esp32").has("rmt7"), true);
+  assert.equal(owners("esp32").has("rmt8"), false);
+  assert.equal(owners("esp32").has("i2s1"), true);
+  assert.equal(owners("esp32").has("i2s2"), false);
+  assert.equal(owners("esp32").has("twai0"), true);
+  assert.equal(owners("esp32").has("twai1"), false);
+  assert.equal(owners("esp32").has("usb0"), false);
+  assert.equal(owners("esp32").has("camera0"), false);
+  assert.equal(owners("esp32").has("sdmmc0"), false);
+  assert.deepEqual(instEnumForType("esp32", "uart"), [0, 1, 2]);
+  assert.deepEqual(instEnumForType("esp32", "ledc"), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+  assert.deepEqual(instEnumForType("esp32", "adc"), [1, 2]);
+  assert.deepEqual(instEnumForType("esp32", "rmt"), [0, 1, 2, 3, 4, 5, 6, 7]);
+  assert.deepEqual(instEnumForType("esp32", "i2s"), [0, 1]);
+  assert.deepEqual(instEnumForType("esp32", "twai"), [0]);
+  assert.equal(instEnumForType("esp32", "usb"), undefined);
+
+  // ESP32-S2: uart 0-1, i2c 0-1, spi 2-3, ledc 0-7, adc 1+2, rmt 0-3, i2s 0, USB OTG 0, 1 TWAI, no SD host.
+  assert.equal(owners("esp32s2").has("uart1"), true);
+  assert.equal(owners("esp32s2").has("uart2"), false);
+  assert.equal(owners("esp32s2").has("i2c1"), true);
+  assert.equal(owners("esp32s2").has("spi3"), true);
+  assert.equal(owners("esp32s2").has("ledc7"), true);
+  assert.equal(owners("esp32s2").has("ledc8"), false);
+  assert.equal(owners("esp32s2").has("adc2"), true);
+  assert.equal(owners("esp32s2").has("rmt3"), true);
+  assert.equal(owners("esp32s2").has("rmt4"), false);
+  assert.equal(owners("esp32s2").has("i2s0"), true);
+  assert.equal(owners("esp32s2").has("i2s1"), false);
+  assert.equal(owners("esp32s2").has("usb0"), true);
+  assert.equal(owners("esp32s2").has("twai0"), true);
+  assert.equal(owners("esp32s2").has("camera0"), false);
+  assert.equal(owners("esp32s2").has("lcd0"), false);
+  assert.equal(owners("esp32s2").has("sdmmc0"), false);
+  assert.deepEqual(instEnumForType("esp32s2", "uart"), [0, 1]);
+  assert.deepEqual(instEnumForType("esp32s2", "ledc"), [0, 1, 2, 3, 4, 5, 6, 7]);
+  assert.deepEqual(instEnumForType("esp32s2", "adc"), [1, 2]);
+  assert.deepEqual(instEnumForType("esp32s2", "rmt"), [0, 1, 2, 3]);
+  assert.deepEqual(instEnumForType("esp32s2", "i2s"), [0]);
+  assert.deepEqual(instEnumForType("esp32s2", "usb"), [0]);
+  assert.deepEqual(instEnumForType("esp32s2", "twai"), [0]);
 });

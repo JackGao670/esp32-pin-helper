@@ -284,3 +284,79 @@ test("C3 and C2 controller instances are chip-specific and do not leak S3/P4 res
   assert.equal(definition("twai", 0, "esp32c2"), undefined);
   assert.deepEqual(candidates(definition("uart", 0, "esp32c2")!.signals[0], "esp32c2").length, 21);
 });
+
+test("classic ESP32 GPIO capabilities, strapping, memory and input-only pins match the official summary", () => {
+  const device = getDevice("esp32")!;
+  // 34 bonded GPIOs: 0-19, 21-23, 25-27, 32-39 (GPIO20 and GPIO24/28-31 are not bonded out).
+  assert.equal(device.pins.length, 34);
+  assert.deepEqual(device.pins.map(pin => pin.gpio),
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33, 34, 35, 36, 37, 38, 39]);
+  // ADC pins are the analog-capable pads; GPIO34-39 are input-only (ADC1) with no output path.
+  assert.equal(device.pins.find(pin => pin.gpio === 34)!.capabilities.output, false);
+  assert.equal(device.pins.find(pin => pin.gpio === 34)!.capabilities.openDrain, false);
+  assert.equal(device.pins.find(pin => pin.gpio === 34)!.capabilities.analog, true);
+  assert.equal(device.pins.find(pin => pin.gpio === 32)!.capabilities.analog, true);
+  assert.equal(device.pins.find(pin => pin.gpio === 3)!.capabilities.analog, false);
+  assert.equal(device.pins.find(pin => pin.gpio === 25)!.capabilities.rtc, true);
+  assert.equal(device.pins.find(pin => pin.gpio === 26)!.capabilities.rtc, true);
+  assert.deepEqual(device.pins.filter(pin => pin.restrictions.some(text => /Strapping/.test(text))).map(pin => pin.gpio), [0, 2, 5, 12, 15]);
+  // Flash GPIO6-11 and the WROVER PSRAM pads GPIO16/17 carry the memory reservation.
+  assert.deepEqual(device.pins.filter(pin => pin.restrictions.some(text => /Flash\/PSRAM/.test(text))).map(pin => pin.gpio), [6, 7, 8, 9, 10, 11, 16, 17]);
+  // The classic ESP32 has no USB controller, so no pin carries a USB restriction of any kind.
+  assert.equal(device.pins.some(pin => /USB/.test(pin.restrictions.join(" "))), false);
+  assert.deepEqual(device.adcUnits, { "1": [36, 37, 38, 39, 32, 33, 34, 35], "2": [4, 0, 2, 15, 13, 12, 14, 27, 25, 26] });
+});
+
+test("ESP32-S2 GPIO capabilities, USB OTG pads and memory pins match the official summary", () => {
+  const device = getDevice("esp32s2")!;
+  // 43 GPIOs: 0-21 and 26-46 (22-25 do not exist).
+  assert.equal(device.pins.length, 43);
+  assert.deepEqual(device.pins.map(pin => pin.gpio),
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46]);
+  // GPIO46 is the only input-only pad; GPIO45/46 are strapping pins.
+  assert.equal(device.pins.find(pin => pin.gpio === 46)!.capabilities.output, false);
+  assert.deepEqual(device.pins.filter(pin => pin.capabilities.output === false).map(pin => pin.gpio), [46]);
+  assert.deepEqual(device.pins.filter(pin => pin.restrictions.some(text => /Strapping/.test(text))).map(pin => pin.gpio), [0, 45, 46]);
+  // USB OTG lives on the fixed internal-PHY pads GPIO19 (D-) / GPIO20 (D+).
+  assert.deepEqual(device.pins.filter(pin => pin.restrictions.some(text => /USB OTG/.test(text))).map(pin => pin.gpio), [19, 20]);
+  // Quad flash/PSRAM is on GPIO26-32; the octal variant adds GPIO33-37.
+  assert.deepEqual(device.pins.filter(pin => pin.restrictions.some(text => /Usually used by Flash\/PSRAM/.test(text))).map(pin => pin.gpio), [26, 27, 28, 29, 30, 31, 32]);
+  assert.deepEqual(device.pins.filter(pin => pin.restrictions.some(text => /Reserved when Octal/.test(text))).map(pin => pin.gpio), [33, 34, 35, 36, 37]);
+  assert.deepEqual(device.adcUnits, { "1": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "2": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20] });
+});
+
+test("ESP32 and ESP32-S2 controller instances are chip-specific and do not leak other chips' resources", () => {
+  // ESP32: UART 0-2, I2C 0-1, SPI 2-3, LEDC 0-15, ADC 1+2, RMT 0-7, I2S 0-1, TWAI 0, and no USB.
+  assert.ok(definition("uart", 2, "esp32"));
+  assert.equal(definition("uart", 3, "esp32"), undefined);
+  assert.ok(definition("i2c", 1, "esp32"));
+  assert.equal(definition("spi", 1, "esp32"), undefined);
+  assert.ok(definition("spi", 3, "esp32"));
+  assert.ok(definition("ledc", 15, "esp32"));
+  assert.equal(definition("ledc", 16, "esp32"), undefined);
+  assert.ok(definition("rmt", 7, "esp32"));
+  assert.equal(definition("rmt", 8, "esp32"), undefined);
+  assert.ok(definition("i2s", 1, "esp32"));
+  assert.ok(definition("twai", 0, "esp32"));
+  assert.equal(definition("usb", 0, "esp32"), undefined);
+  // Every output-capable pad can carry a UART TX line: 34 pins minus the 6 input-only ADC1 pads.
+  assert.deepEqual(candidates(definition("uart", 0, "esp32")!.signals[0], "esp32").length, 28);
+  // ESP32-S2: UART 0-1, I2C 0-1, SPI 2-3, LEDC 0-7, ADC 1+2, RMT 0-3, I2S 0, USB 0, TWAI 0.
+  assert.ok(definition("uart", 1, "esp32s2"));
+  assert.equal(definition("uart", 2, "esp32s2"), undefined);
+  assert.ok(definition("ledc", 7, "esp32s2"));
+  assert.equal(definition("ledc", 8, "esp32s2"), undefined);
+  assert.ok(definition("rmt", 3, "esp32s2"));
+  assert.equal(definition("rmt", 4, "esp32s2"), undefined);
+  assert.ok(definition("i2s", 0, "esp32s2"));
+  assert.equal(definition("i2s", 1, "esp32s2"), undefined);
+  assert.ok(definition("usb", 0, "esp32s2"));
+  assert.ok(definition("twai", 0, "esp32s2"));
+  assert.equal(definition("sdmmc", 0, "esp32s2"), undefined);
+  // The S2 USB OTG signals are locked to their fixed PHY pads.
+  const dn = definition("usb", 0, "esp32s2")!.signals.find(signal => signal.id === "dn")!;
+  const dp = definition("usb", 0, "esp32s2")!.signals.find(signal => signal.id === "dp")!;
+  assert.deepEqual(candidates(dn, "esp32s2"), [19]);
+  assert.deepEqual(candidates(dp, "esp32s2"), [20]);
+  assert.deepEqual(candidates(definition("uart", 0, "esp32s2")!.signals[0], "esp32s2").length, 42);
+});
