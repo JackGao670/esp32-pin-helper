@@ -1,4 +1,4 @@
-import { findNodeAtLocation, parseTree, type ParseError } from "jsonc-parser";
+import { findNodeAtLocation, parseTree, printParseErrorCode, type ParseError } from "jsonc-parser";
 import { parseConfig } from "../core/model/config";
 import { validateGpio, type Problem } from "../core/validator/gpio";
 import type { PlannerSettings } from "../config/userSettings";
@@ -23,7 +23,8 @@ export function diagnosticProblems(text: string,
   };
   if (errors.length) {
     return errors.map(error => ({
-      severity: "error", message: "Invalid JSON syntax in pin configuration.",
+      severity: "error",
+      message: `Invalid JSON syntax in pin configuration: ${printParseErrorCode(error.error)}.`,
       offset: error.offset, length: error.length
     }));
   }

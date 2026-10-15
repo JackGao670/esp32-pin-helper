@@ -1,7 +1,7 @@
 import { getDevice } from "../../database/loader";
 import { gpioFunctions, type PinConfigDocument } from "../model/config";
 import { resolveAssignments } from "../model/peripherals";
-import { candidates, definition, gpioNumber } from "../resolver/peripherals";
+import { candidates, definition, getPeripherals, gpioNumber } from "../resolver/peripherals";
 import type { PlannerSettings, RmtChannelBank } from "../../config/userSettings";
 import { DEFAULT_SETTINGS } from "../../config/userSettings";
 import type { BoardProfile } from "../model/boards";
@@ -25,6 +25,25 @@ export interface ValidationRule {
   check(config: PinConfigDocument, ctx: ValidationContext): Problem[];
 }
 
+/** "0-21, 26-48" — a compact rendering of a GPIO list, for diagnostics. */
+function gpioRanges(gpios: number[]): string {
+  const parts: string[] = [];
+  for (const gpio of [...gpios].sort((a, b) => a - b)) {
+    const last = parts[parts.length - 1];
+    if (last === undefined) { parts.push(`${gpio}`); continue; }
+    const [start, end] = last.includes("-") ? last.split("-").map(Number) : [Number(last), Number(last)];
+    if (gpio === end + 1) parts[parts.length - 1] = `${start}-${gpio}`;
+    else parts.push(`${gpio}`);
+  }
+  return parts.join(", ");
+}
+
+/** First few entries of a list, with an ellipsis when there are more. */
+function shortList(values: (number | string)[], max = 8): string {
+  const shown = values.slice(0, max).join(", ");
+  return values.length > max ? `${shown}, …` : shown;
+}
+
 const gpioRule: ValidationRule = { id: "gpio", check(config, _ctx) {
   const device = getDevice(config.target.chip);
   if (!device) return [{ severity: "warning", path: ["target", "chip"], message: `Target ${config.target.chip} is not supported. Hardware constraints were not checked.` }];
@@ -35,7 +54,8 @@ const gpioRule: ValidationRule = { id: "gpio", check(config, _ctx) {
     const location = { gpio: assignment.gpio, owner: assignment.owner, path };
     const pin = device.pins.find(pin => pin.gpio === assignment.gpio);
     if (!pin) {
-      problems.push({ ...location, severity: "error", message: `GPIO does not exist on ${device.name}.` });
+      problems.push({ ...location, severity: "error",
+        message: `GPIO${assignment.gpio} does not exist on ${device.name}. Valid GPIOs: ${gpioRanges(device.pins.map(entry => entry.gpio))}.` });
       continue;
     }
     const label = `${assignment.owner ? `${assignment.owner}.${assignment.signal}` : `pin[${index}]`}`;
@@ -43,16 +63,17 @@ const gpioRule: ValidationRule = { id: "gpio", check(config, _ctx) {
     if (prior.length) {
       const others = prior.join(", ");
       problems.push({ ...location, severity: "error",
-        message: `Multiple assignments to GPIO${pin.gpio}: ${others} conflicts with ${label}.` });
+        message: `Multiple assignments to GPIO${pin.gpio}: ${others} conflicts with ${label}. Give every signal its own GPIO, or let Auto-assign pick one.` });
     }
     used.set(pin.gpio, [...prior, label]);
     if (!assignment.owner && !(gpioFunctions as readonly string[]).includes(assignment.function)) {
-      problems.push({ ...location, path: ["pins", index, "function"], severity: "warning", message: "This function is preserved but is not validated by the GPIO-only PoC." });
+      problems.push({ ...location, path: ["pins", index, "function"], severity: "warning",
+        message: `"${assignment.function}" is not validated by this planner (it only checks ${gpioFunctions.join(" / ")}); the value is kept as-is.` });
     } else if (!assignment.owner) {
       const mismatch =
-        /INPUT/.test(assignment.function) && !pin.capabilities.input ? `${assignment.function} requires input-capable GPIO.`
-        : /OUTPUT/.test(assignment.function) && !pin.capabilities.output ? `${assignment.function} requires output-capable GPIO.`
-        : /OPEN_DRAIN/.test(assignment.function) && !pin.capabilities.openDrain ? `${assignment.function} requires open-drain-capable GPIO.`
+        /INPUT/.test(assignment.function) && !pin.capabilities.input ? `GPIO${pin.gpio} has no input capability, so ${assignment.function} cannot be used here.`
+        : /OUTPUT/.test(assignment.function) && !pin.capabilities.output ? `GPIO${pin.gpio} is input-only, so ${assignment.function} cannot be used here; choose an output-capable GPIO.`
+        : /OPEN_DRAIN/.test(assignment.function) && !pin.capabilities.openDrain ? `GPIO${pin.gpio} does not support open-drain, so ${assignment.function} cannot be used here.`
         : undefined;
       if (mismatch) problems.push({ ...location, path: ["pins", index, "function"], severity: "error", message: mismatch });
     }
@@ -62,7 +83,8 @@ const gpioRule: ValidationRule = { id: "gpio", check(config, _ctx) {
 } };
 
 const peripheralRule: ValidationRule = { id: "peripherals", check(config, ctx) {
-  if (!getDevice(config.target.chip)) return [];
+  const device = getDevice(config.target.chip);
+  if (!device) return [];
   const problems: Problem[] = [];
   const used = new Set<string>();
   const strict = ctx.settings.schemaStrictInstance;
@@ -73,9 +95,16 @@ const peripheralRule: ValidationRule = { id: "peripherals", check(config, ctx) {
     if (used.has(resource)) problems.push({ ...location, severity: "error", message: `${resource} is configured more than once.` });
     used.add(resource);
     if (!spec) {
+      const knownInstances = getPeripherals(config.target.chip)
+        .filter(peripheralDefinition => peripheralDefinition.type === peripheral.type)
+        .flatMap(peripheralDefinition => peripheralDefinition.instances)
+        .sort((a, b) => a - b);
+      const hint = knownInstances.length
+        ? `${device.name} provides ${peripheral.type}${knownInstances.join(`, ${peripheral.type}`)}.`
+        : `${device.name} has no ${peripheral.type} peripheral.`;
       problems.push({ ...location,
         severity: strict ? "error" : "warning",
-        message: `Unsupported peripheral ${resource}.${strict ? "" : " (schemaStrictInstance=false; diagnostics are downgraded to warnings)"}` });
+        message: `Unsupported peripheral ${resource}. ${hint}${strict ? "" : " (schemaStrictInstance=false; diagnostics are downgraded to warnings)"}` });
       continue;
     }
     for (const [id, value] of Object.entries(peripheral.signals)) {
@@ -83,11 +112,20 @@ const peripheralRule: ValidationRule = { id: "peripherals", check(config, ctx) {
       const gpio = gpioNumber(value);
       const valid = signal && gpio !== undefined && candidates(signal, config.target.chip, peripheral.instance).includes(gpio);
       if (!valid) {
-        problems.push({ ...location, path: [...location.path, "signals", id], gpio, severity: "error", message: `${owner}.${id}: invalid signal or GPIO route (${value}).` });
+        const reason = !signal
+          ? `${owner} has no "${id}" signal; use one of: ${spec.signals.map(entry => entry.id).join(", ")}.`
+          : gpio === undefined
+            ? `"${value}" is not a GPIO reference (expected "GPIO<number>").`
+            : `GPIO${gpio} cannot be routed to ${owner}.${id.toUpperCase()}; use Auto-assign or one of: ${shortList(candidates(signal, config.target.chip, peripheral.instance))}.`;
+        problems.push({ ...location, path: [...location.path, "signals", id], gpio, severity: "error",
+          message: `${owner}.${id}: invalid signal or GPIO route (${value}). ${reason}` });
       }
     }
     for (const signal of spec.signals.filter(signal => signal.required)) {
-      if (!peripheral.signals[signal.id]) problems.push({ ...location, severity: "warning", message: `${owner}.${signal.id.toUpperCase()} is not assigned.` });
+      if (!peripheral.signals[signal.id]) {
+        problems.push({ ...location, severity: "warning",
+          message: `${owner}.${signal.id.toUpperCase()} is not assigned. Assign it, or use Auto-assign for ${owner}.` });
+      }
     }
     if (peripheral.type === "spi") {
       const hasMosmiso = Boolean(peripheral.signals.mosi || peripheral.signals.miso || peripheral.signals.d || peripheral.signals.q || peripheral.signals.wp || peripheral.signals.hd);

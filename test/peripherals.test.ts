@@ -316,7 +316,10 @@ test("TWAI/CAN controllers expose TX/RX on any GPIO and require both lines", () 
   // TX and RX are required: an empty controller warns for both lines.
   let config = addPeripheral(createConfig("esp32s3"), "twai", 0);
   const emptyWarns = validateGpio(config).filter(p => p.severity === "warning" && /twai0\./.test(p.message));
-  assert.deepEqual(emptyWarns.map(p => p.message).sort(), ["twai0.RX is not assigned.", "twai0.TX is not assigned."]);
+  assert.deepEqual(emptyWarns.map(p => p.message).sort(), [
+    "twai0.RX is not assigned. Assign it, or use Auto-assign for twai0.",
+    "twai0.TX is not assigned. Assign it, or use Auto-assign for twai0."
+  ]);
   config = setSignal(config, "twai0", "tx", 4);
   config = setSignal(config, "twai0", "rx", 5);
   assert.ok(!validateGpio(config).some(p => /twai0\.(TX|RX) is not assigned/.test(p.message)),
@@ -335,7 +338,11 @@ test("SDMMC host bus enforces the 1-bit baseline and 4-bit completeness", () => 
   // Missing 1-bit baseline lines → required-signal warnings.
   const empty = addPeripheral(createConfig("esp32s3"), "sdmmc", 0);
   const emptyWarns = validateGpio(empty).filter(p => p.severity === "warning" && /sdmmc0\./.test(p.message)).map(p => p.message).sort();
-  assert.deepEqual(emptyWarns, ["sdmmc0.CLK is not assigned.", "sdmmc0.CMD is not assigned.", "sdmmc0.D0 is not assigned."]);
+  assert.deepEqual(emptyWarns, [
+    "sdmmc0.CLK is not assigned. Assign it, or use Auto-assign for sdmmc0.",
+    "sdmmc0.CMD is not assigned. Assign it, or use Auto-assign for sdmmc0.",
+    "sdmmc0.D0 is not assigned. Assign it, or use Auto-assign for sdmmc0."
+  ]);
 
   // 1-bit baseline (clk/cmd/d0) with no upper lines → no 4-bit warning.
   let oneBit = addPeripheral(createConfig("esp32s3"), "sdmmc", 0);
@@ -359,3 +366,42 @@ test("SDMMC host bus enforces the 1-bit baseline and 4-bit completeness", () => 
   assert.ok(!validateGpio(fourBit).some(p => /4-bit SD bus/.test(p.message)),
     "a fully wired 4-bit bus should not warn");
 });
+
+test("diagnostics explain how to fix the problem, not just that it exists (§4.7)", () => {
+  // A GPIO that does not exist lists the ones that do.
+  const missing = createConfig("esp32s3");
+  missing.pins = [{ gpio: 99, function: "GPIO_INPUT" }];
+  const missingMessage = validateGpio(missing).find(p => p.severity === "error")!.message;
+  assert.match(missingMessage, /GPIO99 does not exist on ESP32-S3/);
+  assert.match(missingMessage, /Valid GPIOs: 0-21, 26-48\./);
+
+  // An input-only pin used as an output says so and what to do.
+  const inputOnly = createConfig("esp32s3");
+  inputOnly.pins = [{ gpio: 46, function: "GPIO_OUTPUT" }];
+  assert.match(validateGpio(inputOnly).find(p => p.severity === "error")!.message,
+    /GPIO46 is input-only, so GPIO_OUTPUT cannot be used here; choose an output-capable GPIO\./);
+
+  // A wrong route points at the pins that would work.
+  const wrongRoute = setSignal(addPeripheral(createConfig("esp32s3"), "i2c", 0), "i2c0", "sda", 46);
+  assert.match(validateGpio(wrongRoute).find(p => /i2c0\.sda: invalid signal/.test(p.message))!.message,
+    /GPIO46 cannot be routed to i2c0\.SDA; use Auto-assign or one of: /);
+
+  // An unknown signal id lists the real ones for that peripheral.
+  const unknownSignal = addPeripheral(createConfig("esp32s3"), "uart", 1);
+  unknownSignal.peripherals!.uart1.signals.bogus = "GPIO5";
+  assert.match(validateGpio(unknownSignal).find(p => /uart1\.bogus: invalid signal/.test(p.message))!.message,
+    /uart1 has no "bogus" signal; use one of: tx, rx, rts, cts\./);
+
+  // An instance the chip does not have lists the ones it does.
+  const unknownInstance = addPeripheral(createConfig("esp32s3"), "uart", 1);
+  unknownInstance.peripherals!.uart5 = { type: "uart", instance: 5, signals: {} };
+  assert.match(validateGpio(unknownInstance).find(p => p.severity === "error")!.message,
+    /Unsupported peripheral uart:5\. ESP32-S3 provides uart0, uart1, uart2\./);
+
+  // A peripheral the chip does not have at all says so.
+  const unknownType = addPeripheral(createConfig("esp32c6"), "uart", 0);
+  unknownType.peripherals!.camera0 = { type: "camera", instance: 0, signals: {} };
+  assert.match(validateGpio(unknownType).find(p => p.severity === "error")!.message,
+    /Unsupported peripheral camera:0\. ESP32-C6 has no camera peripheral\./);
+});
+
