@@ -18,20 +18,20 @@
         "id": "espPinPlanner",
         "name": "espPinPlanner",
         "fullName": "ESP Pin Planner",
-        "description": "Plan ESP32-S3 / C6 / P4 pins from a description; the optimizer assigns the pins and the validator checks them.",
+        "description": "%chat.description%",
         "isSticky": true,
         "commands": [
-          { "name": "generate", "description": "Describe the peripherals to configure; get a validated .pinconfig.json." },
-          { "name": "fix", "description": "Repair the current .pinconfig.json using the Problems reported for it." }
+          { "name": "generate", "description": "%chat.generate.description%" },
+          { "name": "fix", "description": "%chat.fix.description%" }
         ]
       }
     ],
     "commands": [
-      { "command": "espPinPlanner.open", "title": "Open Pin Planner", "category": "ESP Pin Planner", "icon": "$(open-preview)" },
-      { "command": "espPinPlanner.validate", "title": "Validate Pin Config", "category": "ESP Pin Planner", "icon": "$(check)" },
-      { "command": "espPinPlanner.create", "title": "Create New Pin Config", "category": "ESP Pin Planner", "icon": "$(new-file)" },
-      { "command": "espPinPlanner.selectTarget", "title": "Select Target Chip", "category": "ESP Pin Planner", "icon": "$(circuit-board)" },
-      { "command": "espPinPlanner.fixWithAi", "title": "Fix Pin Config with AI", "category": "ESP Pin Planner", "icon": "$(sparkle)" }
+      { "command": "espPinPlanner.open", "title": "%command.open.title%", "category": "ESP Pin Planner", "icon": "$(open-preview)" },
+      { "command": "espPinPlanner.validate", "title": "%command.validate.title%", "category": "ESP Pin Planner", "icon": "$(check)" },
+      { "command": "espPinPlanner.create", "title": "%command.create.title%", "category": "ESP Pin Planner", "icon": "$(new-file)" },
+      { "command": "espPinPlanner.selectTarget", "title": "%command.selectTarget.title%", "category": "ESP Pin Planner", "icon": "$(circuit-board)" },
+      { "command": "espPinPlanner.fixWithAi", "title": "%command.fixWithAi.title%", "category": "ESP Pin Planner", "icon": "$(sparkle)" }
     ],
     "viewsContainers": {
       "activitybar": [
@@ -40,7 +40,7 @@
     },
     "views": {
       "espPinPlanner": [
-        { "id": "espPinPlanner.home", "name": "Pin Planner", "type": "webview" }
+        { "id": "espPinPlanner.home", "name": "%view.home.name%", "type": "webview" }
       ]
     },
     "menus": {
@@ -58,38 +58,45 @@
     "configuration": {
       "title": "ESP Pin Planner",
       "properties": {
+        "espPinPlanner.language": {
+          "type": "string",
+          "enum": ["auto", "en", "zh-cn"],
+          "enumDescriptions": ["%config.language.enum.auto%", "%config.language.enum.en%", "%config.language.enum.zh-cn%"],
+          "default": "auto",
+          "description": "%config.language.description%"
+        },
         "espPinPlanner.defaultTarget": {
           "type": "string",
           "enum": ["esp32s3", "esp32c6", "esp32p4"],
           "default": "esp32s3",
-          "description": "Target chip selected by default when creating a new .pinconfig.json via the 'Create New Pin Config' command, or when validate/open is run on an empty workspace."
+          "description": "%config.defaultTarget.description%"
         },
         "espPinPlanner.schemaStrictInstance": {
           "type": "boolean",
           "default": true,
-          "description": "If true, the JSON schema and runtime validator restrict peripheral owner/instance names to the chip-specific set (e.g. no 'uart5' on ESP32-P4). Turn off to allow experimental/free-form instance names with reduced diagnostics."
+          "description": "%config.schemaStrictInstance.description%"
         },
         "espPinPlanner.rmtChannelBank": {
           "type": "string",
           "enum": ["tx", "rx", "auto"],
           "default": "auto",
-          "description": "RMT channel bank preference used when ESP-IDF boards have per-bank TX-only vs RX-only restrictions on S3/C6. 'auto' warns on ambiguous assignments; 'tx'/'rx' treat all channels as the chosen bank and suppress opposite-direction conflicts."
+          "description": "%config.rmtChannelBank.description%"
         },
         "espPinPlanner.board.preset": {
           "type": "string",
           "enum": ["auto", "none", "byId"],
           "default": "auto",
-          "description": "Board profile selection: 'auto' picks the only shipped board matching the target chip, or the unique board flagged as the chip's reference board (board JSON \"default\": true); 'none' disables board features (no reserved-pin warnings and default signal-map shortcuts); 'byId' uses vendor+id below."
+          "description": "%config.board.preset.description%"
         },
         "espPinPlanner.board.vendor": {
           "type": "string",
           "default": "espressif",
-          "description": "Vendor folder name under boards/<vendor>/ when board.preset='byId'."
+          "description": "%config.board.vendor.description%"
         },
         "espPinPlanner.board.id": {
           "type": "string",
           "default": "esp32-s3-devkitc-1",
-          "description": "Board id (without .json suffix) under boards/<vendor>/ when board.preset='byId'."
+          "description": "%config.board.id.description%"
         }
       }
     }

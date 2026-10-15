@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { usePlanner } from "./store";
+import { useTranslate } from "./i18n";
 import { getPeripherals, candidates, definition } from "../../src/core/resolver/peripherals";
 import { resolveAssignments } from "../../src/core/model/peripherals";
 import { recommendAssignment, type AssignmentPlan, type BoardHints } from "../../src/core/optimizer/assign";
@@ -8,6 +9,7 @@ import { CAMERA_PRESETS, LCD_PRESETS, presetOwnerInstance } from "./presets";
 import type { PeripheralSignalPreset } from "./presets";
 
 export function PeripheralPanel() {
+  const t = useTranslate();
   const { state, send, pending, select, setCandidates, selected } = usePlanner();
   const chip = state.config.target.chip;
   const peripherals = getPeripherals(chip);
@@ -163,42 +165,42 @@ export function PeripheralPanel() {
   return <div className="peripheral-panel">
     {chipHasCamera && cameraPresetsForChip.length > 0 && (
       <section>
-        <h3>Camera Preset</h3>
-        <label htmlFor="camera-preset">Sensor / bus</label>
+        <h3>{t("preset.cameraTitle")}</h3>
+        <label htmlFor="camera-preset">{t("preset.cameraSensor")}</label>
         <select id="camera-preset" defaultValue="" onChange={event => {
           const p = cameraPresetsForChip.find(x => x.id === event.target.value);
           event.target.value = "";
           if (p) applyPreset(p);
         }}>
-          <option value="" disabled>Pick a camera sensor preset…</option>
+          <option value="" disabled>{t("preset.cameraPick")}</option>
           {cameraPresetsForChip.map(p => (
             <option key={p.id} value={p.id}>{p.label} — {p.busWidth}</option>
           ))}
         </select>
-        <p className="muted">Presets are advisory — adjust data lanes/pclk/vsync/href &amp; SCCB pins to match your board.</p>
+        <p className="muted">{t("preset.cameraNote")}</p>
       </section>
     )}
     {chipHasLcd && lcdPresetsForChip.length > 0 && (
       <section>
-        <h3>LCD Preset</h3>
-        <label htmlFor="lcd-preset">Panel / bus width</label>
+        <h3>{t("preset.lcdTitle")}</h3>
+        <label htmlFor="lcd-preset">{t("preset.lcdPanel")}</label>
         <select id="lcd-preset" defaultValue="" onChange={event => {
           const p = lcdPresetsForChip.find(x => x.id === event.target.value);
           event.target.value = "";
           if (p) applyPreset(p);
         }}>
-          <option value="" disabled>Pick an LCD panel preset…</option>
+          <option value="" disabled>{t("preset.lcdPick")}</option>
           {lcdPresetsForChip.map(p => (
             <option key={p.id} value={p.id}>{p.label} — {p.busWidth}</option>
           ))}
         </select>
-        <p className="muted">Presets are advisory — set RGB width, MIPI lane count, WRX/DCX/CS/RST/backlight/TE pins to match your design.</p>
+        <p className="muted">{t("preset.lcdNote")}</p>
       </section>
     )}
     {boardShortcuts.length > 0 && (
       <section className="board-shortcuts">
-        <h3>Board Defaults</h3>
-        <p className="muted">Recommended routing for {state.board?.name}. Applying adds the peripheral (if missing) and fills its signals.</p>
+        <h3>{t("boardDefaults.title")}</h3>
+        <p className="muted">{t("boardDefaults.note", { board: state.board?.name ?? "" })}</p>
         <ul>
           {boardShortcuts.map(shortcut => (
             <li key={shortcut.owner}>
@@ -206,20 +208,21 @@ export function PeripheralPanel() {
                 <small>{Object.entries(shortcut.signals).map(([s, g]) => `${s}=${g}`).join(", ")}</small>
                 {shortcut.boardPins.map(pin => (
                   <small key={pin.gpio} className={`board-pin ${pin.kind}`}>
-                    {`GPIO${pin.gpio} · ${pin.kind === "reserved" ? "board-reserved" : "on-board"}: ${pin.note}`}
+                    {`GPIO${pin.gpio} · ${pin.kind === "reserved" ? t("boardPin.reserved") : t("boardPin.onboard")}: ${pin.note}`}
                   </small>
                 ))}
               </span>
-              <button className="secondary" disabled={disabled} onClick={() => applyBoardShortcut(shortcut)}>
-                Apply
+              <button className="secondary" disabled={disabled} aria-label={t("boardDefaults.applyLabel", { owner: `${shortcut.type.toUpperCase()}${shortcut.instance}` })}
+                onClick={() => applyBoardShortcut(shortcut)}>
+                {t("boardDefaults.apply")}
               </button>
             </li>
           ))}
         </ul>
       </section>
     )}
-    <h3>Add Peripheral</h3>
-    <label htmlFor="peripheral-type">Type</label>
+    <h3>{t("add.title")}</h3>
+    <label htmlFor="peripheral-type">{t("add.type")}</label>
     <select id="peripheral-type" value={type} onChange={event => {
       dismissPlans();
       setType(event.target.value);
@@ -227,7 +230,7 @@ export function PeripheralPanel() {
     }}>
       {peripherals.map(item => <option key={item.type} value={item.type}>{item.type.toUpperCase()}</option>)}
     </select>
-    <label htmlFor="peripheral-instance">Instance</label>
+    <label htmlFor="peripheral-instance">{t("add.instance")}</label>
     <select id="peripheral-instance" value={currentInstance} onChange={event => {
       dismissPlans();
       setInstance(Number(event.target.value));
@@ -236,7 +239,7 @@ export function PeripheralPanel() {
     </select>
     <label className="checkbox" htmlFor="auto-assign">
       <input id="auto-assign" type="checkbox" checked={autoAssign} onChange={event => setAutoAssign(event.target.checked)} />
-      Auto-assign pins
+      {t("add.autoAssign")}
     </label>
     {autoAssign && <label className="checkbox" htmlFor="avoid-strapping">
       <input id="avoid-strapping" type="checkbox" checked={avoidStrapping} onChange={event => {
@@ -244,51 +247,55 @@ export function PeripheralPanel() {
         setAvoidStrapping(value);
         if (plans) solve(pinned, blocked, value);
       }} />
-      Avoid strapping / boot pins
+      {t("add.avoidStrapping")}
     </label>}
     <button className="secondary add-peripheral" disabled={disabled} onClick={() =>
       autoAssign ? generatePlans()
         : send({ type: "addPeripheral", peripheral: available.type, instance: currentInstance, revision: state.revision })}>
-      {autoAssign ? `Recommend pins for ${available.type.toUpperCase()}${currentInstance}` : `Add ${available.type.toUpperCase()}${currentInstance}`}</button>
+      {autoAssign ? t("add.recommend", { owner: `${available.type.toUpperCase()}${currentInstance}` })
+        : t("add.plain", { owner: `${available.type.toUpperCase()}${currentInstance}` })}</button>
     {plans && <section className="plan-preview">
-      <div className="section-heading"><strong>{`Auto-assign · ${plans.length} plan${plans.length === 1 ? "" : "s"}`}</strong>
-        <button className="secondary" onClick={dismissPlans}>Dismiss</button></div>
+      <div className="section-heading"><strong>{plans.length === 1 ? t("plan.heading", { count: plans.length }) : t("plan.headingMany", { count: plans.length })}</strong>
+        <button className="secondary" onClick={dismissPlans}>{t("plan.dismiss")}</button></div>
       {plans.length === 0
-        ? <p className="restriction">No viable auto-assignment for {available.type.toUpperCase()}{currentInstance} on {chip.toUpperCase()} with the current pins. Add it manually to inspect the routes.</p>
+        ? <p className="restriction">{t("plan.none", { owner: `${available.type.toUpperCase()}${currentInstance}`, chip: chip.toUpperCase() })}</p>
         : <>
           {plans.length > 1 && <div className="plan-tabs">{plans.map((plan, index) =>
-            <button key={index} className={`secondary ${index === planIndex ? "active" : ""}`} onClick={() => previewPlan(index)}>
+            <button key={index} className={`secondary ${index === planIndex ? "active" : ""}`} aria-pressed={index === planIndex}
+              aria-label={t("plan.tab", { index: index + 1, score: Math.round(plan.score) })} onClick={() => previewPlan(index)}>
               #{index + 1} · {Math.round(plan.score)}</button>)}</div>}
-          {Object.keys(pinned).length > 0 && <p className="restriction">Accepted signals are locked to their pin; Replace tries another pin for one signal.</p>}
+          {Object.keys(pinned).length > 0 && <p className="restriction">{t("plan.lockedNote")}</p>}
           <ul className="plan-signals">{Object.entries(plans[planIndex].peripherals).flatMap(([owner, peripheral]) =>
             Object.entries(peripheral.signals).map(([signal, ref]) => {
               const key = `${owner}.${signal}`;
               const gpio = Number(ref.slice(4));
+              const target = `${owner}.${signal.toUpperCase()}`;
               return <li key={key} className={gpio === selected ? "active" : ""}>
-                <span className="plan-signal-name">{owner}.{signal.toUpperCase()}
-                  {pinned[key] !== undefined && <em className="locked">locked</em>}</span>
-                <code role="button" title="Select this pin" onClick={() => select(gpio)}>{ref}</code>
+                <span className="plan-signal-name">{target}
+                  {pinned[key] !== undefined && <em className="locked">{t("plan.lockedBadge")}</em>}</span>
+                <button type="button" className="link-pin" title={t("plan.selectPin")}
+                  aria-label={t("plan.selectPinLabel", { ref, owner: target })} onClick={() => select(gpio)}>{ref}</button>
                 <span className="plan-actions">
-                  <button className="secondary" title="Lock this pin and re-route the other signals"
-                    onClick={() => acceptSignal(key, gpio)}>Accept</button>
-                  <button className="secondary" title="Try a different pin for this signal"
-                    onClick={() => replaceSignal(key, gpio)}>Replace</button>
+                  <button className="secondary" title={t("plan.acceptTitle")}
+                    aria-label={t("plan.acceptLabel", { ref, owner: target })} onClick={() => acceptSignal(key, gpio)}>{t("plan.accept")}</button>
+                  <button className="secondary" title={t("plan.replaceTitle")}
+                    aria-label={t("plan.replaceLabel", { ref, owner: target })} onClick={() => replaceSignal(key, gpio)}>{t("plan.replace")}</button>
                 </span>
               </li>;
             }))}
           </ul>
           {plans[planIndex].warnings.length > 0 && <ul className="plan-warnings">
             {plans[planIndex].warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>}
-          <button className="secondary add-peripheral" disabled={disabled} onClick={applyPlan}>Apply plan #{planIndex + 1}</button>
+          <button className="secondary add-peripheral" disabled={disabled} onClick={applyPlan}>{t("plan.apply", { index: planIndex + 1 })}</button>
         </>}
     </section>}
     {Object.entries(state.config.peripherals ?? {}).map(([owner, peripheral]) => {
       const spec = definition(peripheral.type, peripheral.instance, state.config.target.chip);
       return <section className="peripheral-card" key={owner}>
         <div className="section-heading"><strong>{owner}</strong>
-          <button className="secondary" disabled={disabled} aria-label={`Remove ${owner}`} onClick={() =>
-            send({ type: "removePeripheral", owner, revision: state.revision })}>Remove</button></div>
-        {!spec && <p className="restriction">Unsupported peripheral. Data preserved.</p>}
+          <button className="secondary" disabled={disabled} aria-label={t("peripheral.removeLabel", { owner })} onClick={() =>
+            send({ type: "removePeripheral", owner, revision: state.revision })}>{t("peripheral.remove")}</button></div>
+        {!spec && <p className="restriction">{t("peripheral.unsupported")}</p>}
         {spec?.signals.map(signal => {
           const current = peripheral.signals[signal.id] ?? "";
           const options = candidates(signal, state.config.target.chip, peripheral.instance);
@@ -299,17 +306,16 @@ export function PeripheralPanel() {
               if (gpio !== null) select(gpio);
               send({ type: "setSignal", owner, signal: signal.id, gpio, revision: state.revision });
             }}>
-              <option value="">Not assigned</option>
-              {current && !options.some(gpio => current === `GPIO${gpio}`) && <option value={current}>{current} (invalid)</option>}
+              <option value="">{t("signal.notAssigned")}</option>
+              {current && !options.some(gpio => current === `GPIO${gpio}`) && <option value={current}>{t("signal.invalid", { value: current })}</option>}
               {options.map(gpio => <option key={gpio} value={`GPIO${gpio}`}>
-                GPIO{gpio}{assignments.some(item => item.gpio === gpio && (item.owner !== owner || item.signal !== signal.id)) ? " (used)" : ""}
+                GPIO{gpio}{assignments.some(item => item.gpio === gpio && (item.owner !== owner || item.signal !== signal.id)) ? t("signal.used") : ""}
               </option>)}
             </select>
           </div>;
         })}
       </section>;
     })}
-    <p className="muted">UART: full duplex. SPI: master mode. LEDC: PWM output. ADC: analog input. I2S: master mode.<br />I2C needs external pull-up resistors. RMT direction is not enforced. ADC2 shares hardware with Wi-Fi.<br />* Required in this profile.</p>
+    <p className="muted">{t("peripheral.note1")}<br />{t("peripheral.note2")}<br />{t("peripheral.note3")}</p>
   </div>;
 }
-

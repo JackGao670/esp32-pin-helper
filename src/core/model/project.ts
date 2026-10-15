@@ -1,3 +1,5 @@
+import { defaultTranslate, type Translate } from "../../i18n/messages";
+
 export type TargetChip = "esp32s3" | "esp32c6" | "esp32p4";
 
 export function parseSdkconfigTarget(text: string): string | undefined {
@@ -7,8 +9,9 @@ export function parseSdkconfigTarget(text: string): string | undefined {
   return matches[0]?.[1];
 }
 
-export function projectNotice(configTarget: string, projectTarget?: string): string {
+/** The notice is rendered inside the WebView, so it follows the interface language. */
+export function projectNotice(configTarget: string, projectTarget?: string, t: Translate = defaultTranslate): string {
   return projectTarget && configTarget !== projectTarget
-    ? `Project target ${projectTarget} differs from pin configuration target ${configTarget}. Configuration was not changed.`
+    ? t("notice.targetMismatch", { project: projectTarget, config: configTarget })
     : "";
 }

@@ -6,9 +6,15 @@ import { addPeripheral, removePeripheral, setSignal, selectTarget } from "../../
 import { getDevice } from "../../src/database/loader";
 import { resolveBoardFromSettings, boardInfoOf } from "../../src/database/boardLoader";
 import { DEFAULT_SETTINGS } from "../../src/config/userSettings";
+import { resolveLanguage, translator, type Language } from "../../src/i18n/messages";
 
 declare const acquireVsCodeApi: undefined | (() => { postMessage(message: ClientMessage): void });
 const vscode = typeof acquireVsCodeApi === "function" ? acquireVsCodeApi() : undefined;
+
+// Before the host sends its resolved language, mirror the WebView's own locale (§4.7 i18n).
+const startupLanguage: Language = resolveLanguage(DEFAULT_SETTINGS.language,
+  typeof navigator !== "undefined" ? navigator.language : undefined);
+const startupTranslate = translator(startupLanguage);
 
 interface Store {
   state: PlannerState;
@@ -29,11 +35,12 @@ function makeInitialState(): PlannerState {
   const state: PlannerState = {
     config,
     revision: 0,
-    file: vscode ? "Loading..." : "Browser preview (not saved to disk)",
+    file: vscode ? startupTranslate("notice.loading") : startupTranslate("notice.browserPreviewFile"),
     writable: !vscode,
     problems: vscode ? [] : validateGpio(config),
-    notice: vscode ? "" : "Preview mode: edits are in memory only.",
-    board: board ? boardInfoOf(board) : undefined
+    notice: vscode ? "" : startupTranslate("notice.previewMode"),
+    board: board ? boardInfoOf(board) : undefined,
+    language: startupLanguage
   };
   return state;
 }

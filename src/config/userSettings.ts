@@ -8,6 +8,7 @@
  */
 
 import type { TargetChip } from "../core/model/project";
+import { isLanguageSetting, type LanguageSetting } from "../i18n/messages";
 
 export type RmtChannelBank = "tx" | "rx" | "auto";
 export type BoardSetting =
@@ -27,13 +28,16 @@ export interface PlannerSettings {
   schemaStrictInstance: boolean;
   rmtChannelBank: RmtChannelBank;
   board: BoardSetting;
+  /** Interface language: `auto` follows the VS Code / browser display language (§4.7 i18n). */
+  language: LanguageSetting;
 }
 
 export const DEFAULT_SETTINGS: PlannerSettings = {
   defaultTarget: "esp32s3",
   schemaStrictInstance: true,
   rmtChannelBank: "auto",
-  board: { preset: "auto" }
+  board: { preset: "auto" },
+  language: "auto"
 };
 
 export function isTargetChip(value: unknown): value is TargetChip {
@@ -53,12 +57,16 @@ export function isValidBoardSetting(value: unknown): value is BoardSetting {
     && typeof v.board === "string" && v.board.length > 0;
 }
 
+const ENV_NAMES: Record<keyof PlannerSettings, string> = {
+  defaultTarget: "ESP_PP_DEFAULT_TARGET",
+  schemaStrictInstance: "ESP_PP_SCHEMA_STRICT_INSTANCE",
+  rmtChannelBank: "ESP_PP_RMT_CHANNEL_BANK",
+  board: "ESP_PP_BOARD",
+  language: "ESP_PP_LANGUAGE"
+};
+
 function envOverride<K extends keyof PlannerSettings>(key: K): PlannerSettings[K] | undefined {
-  const envName = key === "defaultTarget" ? "ESP_PP_DEFAULT_TARGET"
-    : key === "schemaStrictInstance" ? "ESP_PP_SCHEMA_STRICT_INSTANCE"
-    : key === "rmtChannelBank" ? "ESP_PP_RMT_CHANNEL_BANK"
-    : "ESP_PP_BOARD";
-  const raw = typeof process !== "undefined" && process.env ? process.env[envName] : undefined;
+  const raw = typeof process !== "undefined" && process.env ? process.env[ENV_NAMES[key]] : undefined;
   if (raw === undefined || raw === "") return undefined;
   if (key === "schemaStrictInstance") {
     const lower = raw.trim().toLowerCase();
@@ -68,6 +76,7 @@ function envOverride<K extends keyof PlannerSettings>(key: K): PlannerSettings[K
   }
   if (key === "defaultTarget" && isTargetChip(raw.trim())) return raw.trim() as PlannerSettings[K];
   if (key === "rmtChannelBank" && isRmtChannelBank(raw.trim())) return raw.trim() as PlannerSettings[K];
+  if (key === "language" && isLanguageSetting(raw.trim())) return raw.trim() as PlannerSettings[K];
   if (key === "board") {
     const trimmed = raw.trim();
     if (trimmed === "none" || trimmed === "auto") return { preset: trimmed } as PlannerSettings[K];
@@ -87,7 +96,8 @@ export function readHeadlessSettings(overrides: Partial<PlannerSettings> = {}): 
     defaultTarget: overrides.defaultTarget ?? envOverride("defaultTarget") ?? DEFAULT_SETTINGS.defaultTarget,
     schemaStrictInstance: overrides.schemaStrictInstance ?? envOverride("schemaStrictInstance") ?? DEFAULT_SETTINGS.schemaStrictInstance,
     rmtChannelBank: overrides.rmtChannelBank ?? envOverride("rmtChannelBank") ?? DEFAULT_SETTINGS.rmtChannelBank,
-    board: overrides.board ?? envOverride("board") ?? DEFAULT_SETTINGS.board
+    board: overrides.board ?? envOverride("board") ?? DEFAULT_SETTINGS.board,
+    language: overrides.language ?? envOverride("language") ?? DEFAULT_SETTINGS.language
   };
 }
 
@@ -122,11 +132,13 @@ export function readSettings(overrides: Partial<PlannerSettings> = {},
   else if (boardPreset === "byId" && typeof byVendor === "string" && typeof byBoard === "string")
     board = { preset: "byId", vendor: byVendor, board: byBoard };
   const boardVal = isValidBoardSetting(board) ? board : envOverride("board");
+  const language = cfg.get<string>("language");
   return {
     defaultTarget: overrides.defaultTarget ?? (isTargetChip(defaultTarget) ? defaultTarget : envOverride("defaultTarget")) ?? headless.defaultTarget,
     schemaStrictInstance: overrides.schemaStrictInstance ?? (typeof strict === "boolean" ? strict : envOverride("schemaStrictInstance")) ?? headless.schemaStrictInstance,
     rmtChannelBank: overrides.rmtChannelBank ?? (isRmtChannelBank(bank) ? bank : envOverride("rmtChannelBank")) ?? headless.rmtChannelBank,
-    board: overrides.board ?? boardVal ?? headless.board
+    board: overrides.board ?? boardVal ?? headless.board,
+    language: overrides.language ?? (isLanguageSetting(language) ? language : envOverride("language")) ?? headless.language
   };
 }
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

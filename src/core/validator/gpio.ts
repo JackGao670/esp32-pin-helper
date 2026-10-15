@@ -435,7 +435,8 @@ export function validateGpio(config: PinConfigDocument,
     defaultTarget: settingsOverride.defaultTarget ?? DEFAULT_SETTINGS.defaultTarget,
     schemaStrictInstance: settingsOverride.schemaStrictInstance ?? DEFAULT_SETTINGS.schemaStrictInstance,
     rmtChannelBank: settingsOverride.rmtChannelBank ?? DEFAULT_SETTINGS.rmtChannelBank,
-    board: settingsOverride.board ?? DEFAULT_SETTINGS.board
+    board: settingsOverride.board ?? DEFAULT_SETTINGS.board,
+    language: settingsOverride.language ?? DEFAULT_SETTINGS.language
   };
   const chip = config.target.chip as Parameters<typeof resolveBoardFromSettings>[1];
   const board = resolveBoardFromSettings(settings.board,

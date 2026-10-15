@@ -1,0 +1,21 @@
+{
+  "chat.description": "用一句描述规划 ESP32-S3 / C6 / P4 的引脚；引脚由优化器分配、由校验器检查。",
+  "chat.generate.description": "描述需要配置的外设，直接得到经过校验的 .pinconfig.json。",
+  "chat.fix.description": "依据该配置报出的 Problems 修复现有 .pinconfig.json。",
+  "command.open.title": "打开引脚规划器",
+  "command.validate.title": "校验引脚配置",
+  "command.create.title": "新建引脚配置",
+  "command.selectTarget.title": "选择目标芯片",
+  "command.fixWithAi.title": "用 AI 修复引脚配置",
+  "view.home.name": "引脚规划",
+  "config.language.description": "引脚规划面板与活动栏视图的界面语言。'auto' 跟随 VS Code 显示语言；'en' / 'zh-cn' 分别强制英文与简体中文。",
+  "config.language.enum.auto": "跟随 VS Code 显示语言。",
+  "config.language.enum.en": "始终使用英文。",
+  "config.language.enum.zh-cn": "始终使用简体中文。",
+  "config.defaultTarget.description": "通过「新建引脚配置」命令创建 .pinconfig.json 时的默认目标芯片；在空工作区执行校验/打开命令时同样生效。",
+  "config.schemaStrictInstance.description": "为 true 时，JSON Schema 与运行时校验会把外设 owner/instance 名称限制在该芯片的合法集合内（例如 P4 上不允许 uart5）。关闭后允许实验性/自由命名的实例，但诊断能力相应减弱。",
+  "config.rmtChannelBank.description": "S3/C6 上 RMT 通道存在「按 bank 仅 TX / 仅 RX」限制时的偏好设置。'auto' 对歧义分配给出警告；'tx'/'rx' 把所有通道视为指定 bank，并抑制反方向的冲突提示。",
+  "config.board.preset.description": "开发板配置选择：'auto' 选取该目标芯片下唯一随插件提供的开发板，或唯一标记为参考板的板子（board JSON 中 \"default\": true）；'none' 关闭开发板特性（不再有保留引脚警告与默认接线快捷方式）；'byId' 使用下方的 vendor+id。",
+  "config.board.vendor.description": "board.preset='byId' 时，boards/<vendor>/ 下的厂商目录名。",
+  "config.board.id.description": "board.preset='byId' 时，boards/<vendor>/ 下的开发板 id（不含 .json 后缀）。"
+}

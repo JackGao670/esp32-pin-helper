@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { randomBytes } from "node:crypto";
 import { buildHomeModel, renderHomeHtml, type HomeModel } from "./homeModel";
 import type { PlannerSettings } from "../config/userSettings";
+import { resolveLanguage } from "../i18n/messages";
 
 /**
  * Webview view shown in the ESP Pin Planner activity bar container. It is the extension's
@@ -23,15 +24,18 @@ export class PlannerHomeProvider implements vscode.WebviewViewProvider {
   async refresh(): Promise<void> {
     const view = this.view;
     if (!view) return;
-    const model = await this.collect();
+    const settings = this.readSettings();
+    const model = await this.collect(settings);
     view.description = model.folderName;
-    view.webview.html = renderHomeHtml(model, { nonce: randomBytes(16).toString("hex") });
+    view.webview.html = renderHomeHtml(model, {
+      nonce: randomBytes(16).toString("hex"),
+      language: resolveLanguage(settings.language, vscode.env?.language)
+    });
   }
 
-  private async collect(): Promise<HomeModel> {
+  private async collect(settings: PlannerSettings): Promise<HomeModel> {
     const folders = vscode.workspace.workspaceFolders;
     const folder = folders?.length === 1 ? folders[0] : folders?.[0];
-    const settings = this.readSettings();
     if (!folder) return buildHomeModel({ folderName: undefined, raw: undefined, settings });
     const uri = vscode.Uri.joinPath(folder.uri, ".pinconfig.json");
     const open = vscode.workspace.textDocuments.find(document => document.uri.toString() === uri.toString());

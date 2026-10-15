@@ -53,6 +53,10 @@ test("home model: ready state summarises chip, board and problem counts", () => 
   assert.match(html, /command:espPinPlanner\.validate/);
   assert.match(html, /command:espPinPlanner\.selectTarget/);
   assert.match(html, /<style nonce="test-nonce">/);
+  // §4.7 accessibility: the view content sits in a main landmark with a declared language.
+  assert.match(html, /<html lang="en">/);
+  assert.match(html, /<body><main>/);
+  assert.match(html, /<\/main><\/body>/);
 });
 
 test("home model: hardware violations and unsupported chips surface in the counts", () => {

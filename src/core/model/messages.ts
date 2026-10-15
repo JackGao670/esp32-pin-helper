@@ -1,5 +1,6 @@
 import type { PinConfigDocument, GpioFunction } from "./config";
 import type { Problem } from "../validator/gpio";
+import type { Language } from "../../i18n/messages";
 
 export interface BoardInfo {
   vendor: string;
@@ -21,6 +22,8 @@ export interface PlannerState {
   problems: Problem[];
   notice: string;
   board?: BoardInfo;
+  /** Resolved interface language; the WebView falls back to the browser language when absent. */
+  language?: Language;
 }
 
 export type ClientMessage =

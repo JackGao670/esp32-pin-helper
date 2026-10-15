@@ -31,6 +31,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   file list). The manifest's `apiVersion` is gated at load time and checked against the real data by tests,
   so chip data can be versioned and released on its own track. A dedicated `Device Pack` workflow validates
   the manifest and packs the tarball independently of the extension.
+- **Accessibility** (§4.7): the webview is now screen-reader and keyboard friendly. Every pin cell is a
+  `aria-pressed` toggle button whose `aria-label` carries the same description as its tooltip (reserved /
+  on-board / recommended / assigned state), decorative dots and the chip mark are `aria-hidden`, the pinout
+  and legend are exposed as labelled `group` / `list`, the inspector status and problem counts are live
+  regions, and each panel is a labelled landmark. Plan-row pin references are real `<button>`s (previously
+  a `<code role="button">`) and plan tabs, board-default Apply and Accept/Replace carry accessible names.
+  Focus rings now cover inputs as well as buttons and selects, and the Activity Bar home view and the
+  planner panel declare `lang="en"` and a `<main>` landmark. Covered by `test/webviewA11y.test.ts`, which
+  statically renders the webview and asserts these attributes.
+- **Internationalization** (§4.7): the interface is now bilingual (English / Simplified Chinese). A single
+  pure-core catalog (`src/i18n/messages.ts`) is shared by the extension host, the WebView and the tests, so
+  the two sides can never drift; keys are plain `{name}` templates and unknown parameters are left verbatim.
+  The language follows the VS Code display language by default and can be forced with
+  `espPinPlanner.language` (`auto` / `en` / `zh-cn`). Command titles, the Activity Bar view and every
+  setting description are localised through `package.nls.json` / `package.nls.zh-cn.json`, and validator
+  diagnostics intentionally stay English so tooling and existing tests keep a stable contract.
 
 ## [0.0.3] - 2026-10-14
 

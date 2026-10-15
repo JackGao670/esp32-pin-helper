@@ -10,6 +10,7 @@ import { getDevice } from "../database/loader";
 import { resolveBoardFromSettings } from "../database/boardLoader";
 import type { TargetChip } from "../core/model/project";
 import type { PlannerSettings } from "../config/userSettings";
+import { defaultTranslate, translator, type Language, type Translate } from "../i18n/messages";
 
 export type HomeStatus = "no-folder" | "no-file" | "invalid" | "ready";
 
@@ -65,6 +66,8 @@ export function buildHomeModel(input: HomeInput): HomeModel {
 
 export interface HomeRenderOptions {
   nonce: string;
+  /** Interface language; defaults to English so existing callers keep working. */
+  language?: Language;
 }
 
 function escapeHtml(value: string): string {
@@ -77,34 +80,35 @@ function action(command: string, label: string, kind: "primary" | "secondary"): 
 
 /** Static HTML with no scripts: `command:` links need enableCommandUris on the webview. */
 export function renderHomeHtml(model: HomeModel, options: HomeRenderOptions): string {
+  const t: Translate = options.language ? translator(options.language) : defaultTranslate;
   const actions: string[] = [];
   const rows: string[] = [];
   let subtitle = "";
 
   if (model.status === "no-folder") {
-    subtitle = "Open a folder to plan ESP32 pins.";
-    actions.push(action("espPinPlanner.open", "Open Pin Planner", "primary"));
+    subtitle = t("home.subtitleNoFolder");
+    actions.push(action("espPinPlanner.open", t("command.open"), "primary"));
   } else if (model.status === "no-file") {
-    subtitle = `No .pinconfig.json in ${escapeHtml(model.folderName!)}.`;
-    actions.push(action("espPinPlanner.create", "Create New Pin Config", "primary"));
-    actions.push(action("espPinPlanner.open", "Open Pin Planner", "secondary"));
+    subtitle = t("home.subtitleNoFile", { folder: escapeHtml(model.folderName!) });
+    actions.push(action("espPinPlanner.create", t("command.create"), "primary"));
+    actions.push(action("espPinPlanner.open", t("command.open"), "secondary"));
   } else if (model.status === "invalid") {
-    subtitle = `.pinconfig.json in ${escapeHtml(model.folderName!)} could not be parsed.`;
-    rows.push(`<dt>Problem</dt><dd class="err">${escapeHtml(model.parseError ?? "Invalid JSON.")}</dd>`);
-    actions.push(action("espPinPlanner.open", "Open Pin Planner", "primary"));
-    actions.push(action("espPinPlanner.validate", "Validate Pin Config", "secondary"));
+    subtitle = t("home.subtitleInvalid", { folder: escapeHtml(model.folderName!) });
+    rows.push(`<dt>${t("home.rowProblem")}</dt><dd class="err">${escapeHtml(model.parseError ?? "Invalid JSON.")}</dd>`);
+    actions.push(action("espPinPlanner.open", t("command.open"), "primary"));
+    actions.push(action("espPinPlanner.validate", t("command.validate"), "secondary"));
   } else {
-    subtitle = `${escapeHtml(model.chipName ?? model.chip ?? "")}${model.supported ? "" : " (not supported)"}`;
-    rows.push(`<dt>Chip</dt><dd>${escapeHtml(model.chip ?? "")}</dd>`);
-    if (model.boardName) rows.push(`<dt>Board</dt><dd>${escapeHtml(model.boardName)}</dd>`);
-    rows.push(`<dt>Problems</dt><dd><span class="${model.errors ? "err" : "ok"}">${model.errors} errors</span> · `
-      + `<span class="${model.warnings ? "warn" : "ok"}">${model.warnings} warnings</span></dd>`);
-    actions.push(action("espPinPlanner.open", "Open Pin Planner", "primary"));
-    actions.push(action("espPinPlanner.validate", "Validate Pin Config", "secondary"));
-    actions.push(action("espPinPlanner.selectTarget", "Select Target Chip", "secondary"));
+    subtitle = `${escapeHtml(model.chipName ?? model.chip ?? "")}${model.supported ? "" : t("home.subtitleUnsupported")}`;
+    rows.push(`<dt>${t("home.rowChip")}</dt><dd>${escapeHtml(model.chip ?? "")}</dd>`);
+    if (model.boardName) rows.push(`<dt>${t("home.rowBoard")}</dt><dd>${escapeHtml(model.boardName)}</dd>`);
+    rows.push(`<dt>${t("problems.title")}</dt><dd><span class="${model.errors ? "err" : "ok"}">${t("home.errors", { count: model.errors })}</span> · `
+      + `<span class="${model.warnings ? "warn" : "ok"}">${t("home.warnings", { count: model.warnings })}</span></dd>`);
+    actions.push(action("espPinPlanner.open", t("command.open"), "primary"));
+    actions.push(action("espPinPlanner.validate", t("command.validate"), "secondary"));
+    actions.push(action("espPinPlanner.selectTarget", t("command.selectTarget"), "secondary"));
   }
 
-  return `<!doctype html><html lang="en"><head><meta charset="UTF-8">
+  return `<!doctype html><html lang="${options.language ?? "en"}"><head><meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'nonce-${options.nonce}';">
 <style nonce="${options.nonce}">
 body { font-family: var(--vscode-font-family); font-size: 12px; color: var(--vscode-foreground); padding: 8px 12px 12px; }
@@ -122,10 +126,10 @@ dd { margin: 0; overflow-wrap: anywhere; }
 .err { color: var(--vscode-editorError-foreground); }
 .warn { color: var(--vscode-editorWarning-foreground); }
 .ok { color: var(--vscode-charts-green); }
-</style></head><body>
+</style></head><body><main>
 <h1>ESP Pin Planner</h1>
 <p class="sub">${subtitle}</p>
 <div class="actions">${actions.join("")}</div>
 ${rows.length ? `<dl>${rows.join("")}</dl>` : ""}
-</body></html>`;
+</main></body></html>`;
 }
