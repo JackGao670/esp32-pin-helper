@@ -52,8 +52,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   separate from UART0-4 / I2C0-1. LP signals are routed through the LP GPIO matrix and can only reach the
   low-power domain pads **GPIO0-15** (VDD_LP / VDD_BAT), so every LP signal carries an explicit pad allow-list
   and the candidate/validator layer rejects HP pads such as GPIO20. The schema gains the `lpuart` / `lpi2c`
-  types, the `signals-lpuart` / `signals-lpi2c` signal maps and the P4 owner/instance constraints. LP_SPI,
-  LP_I2S and LP_CAM remain unmodelled.
+  types, the `signals-lpuart` / `signals-lpi2c` signal maps and the P4 owner/instance constraints.
+- **ESP32-P4 low-power SPI / I2S** (§4.1): the P4 database now also models the **LP SPI** (`lpspi0`,
+  LP_SPI_CK/CS/D/Q) and the **LP I2S** (`lpi2s0`) controllers on the same low-power domain as above, so they
+  are likewise restricted to GPIO0-15. ESP-IDF documents that LP I2S on ESP32-P4 works as an **I2S slave only**
+  and exposes an RX channel only (no TX, no DMA), so its `bclk` / `ws` / `din` lines are modelled as inputs fed
+  by an external master. No LP SPI driver is documented in ESP-IDF v5.4, and the LP GPIO matrix exposes both an
+  input and an output path for each LP SPI line, so the four lines are modelled role-agnostically rather than
+  asserting a master/slave role. The schema gains the `lpspi` / `lpi2s` types, the `signals-lpspi` /
+  `signals-lpi2s` signal maps and the P4 owner/instance constraints. LP_CAM remains unmodelled.
 
 ### Fixed
 - **ESP32-P4 ADC units** (§4.1): the P4 database now models **two** ADC units — ADC1 on GPIO16-23 and

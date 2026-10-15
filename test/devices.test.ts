@@ -129,6 +129,33 @@ test("P4 LP UART/I2C only reach the low-power domain pads GPIO0-15", () => {
   assert.deepEqual(validateGpio(good), []);
 });
 
+test("P4 LP SPI/I2S only reach the low-power domain pads GPIO0-15", () => {
+  assert.ok(definition("lpspi", 0, "esp32p4"));
+  assert.equal(definition("lpspi", 1, "esp32p4"), undefined);
+  assert.ok(definition("lpi2s", 0, "esp32p4"));
+  assert.equal(definition("lpi2s", 1, "esp32p4"), undefined);
+  // The LP controllers are P4-only; they do not exist on the other supported chips.
+  assert.equal(definition("lpspi", 0, "esp32s3"), undefined);
+  assert.equal(definition("lpi2s", 0, "esp32c6"), undefined);
+  const lpDomain = Array.from({ length: 16 }, (_, i) => i);
+  const signal = (type: string, id: string) => definition(type, 0, "esp32p4")!.signals.find(entry => entry.id === id)!;
+  // The LP I2S is a slave receiver, so its clock and data lines are inputs from an external master.
+  assert.equal(signal("lpi2s", "bclk").direction, "input");
+  assert.equal(signal("lpi2s", "din").direction, "input");
+  assert.deepEqual(candidates(signal("lpspi", "sclk"), "esp32p4"), lpDomain);
+  assert.deepEqual(candidates(signal("lpi2s", "din"), "esp32p4"), lpDomain);
+  // HP-only pads (e.g. GPIO20) must never be offered for an LP signal.
+  assert.equal(candidates(signal("lpi2s", "bclk"), "esp32p4").includes(20), false);
+  // Routing an LP signal to an HP pad is a hard error.
+  const bad = setSignal(addPeripheral(createConfig("esp32p4"), "lpspi", 0), "lpspi0", "sclk", 20);
+  assert.ok(validateGpio(bad).some(problem => problem.severity === "error" && problem.owner === "lpspi0"));
+  // A plausible LP I2S slave-RX wiring on GPIO2-4 validates cleanly.
+  let good = setSignal(addPeripheral(createConfig("esp32p4"), "lpi2s", 0), "lpi2s0", "bclk", 2);
+  good = setSignal(good, "lpi2s0", "ws", 3);
+  good = setSignal(good, "lpi2s0", "din", 4);
+  assert.deepEqual(validateGpio(good), []);
+});
+
 test("P1 peripherals expose target-specific instance counts", () => {
   assert.ok(definition("ledc", 7, "esp32s3"));
   assert.ok(definition("ledc", 7, "esp32p4"));
