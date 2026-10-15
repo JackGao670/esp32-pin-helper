@@ -127,6 +127,69 @@
           }
         }
       }
+    },
+    {
+      "if": { "properties": { "target": { "properties": { "chip": { "const": "esp32c3" } }, "required": ["chip"] } } },
+      "then": {
+        "properties": {
+          "peripherals": {
+            "propertyNames": {
+              "enum": [
+                "uart0","uart1",
+                "i2c0",
+                "spi2",
+                "ledc0","ledc1","ledc2","ledc3","ledc4","ledc5",
+                "adc1","adc2",
+                "rmt0","rmt1","rmt2","rmt3",
+                "i2s0","usb0",
+                "twai0"
+              ],
+              "description": "ESP32-C3 (IDF v5.4): UART 0-1, I2C 0 only, SPI 2 only (SPI0/1 are the flash controllers), LEDC 0-5, ADC1 (GPIO0-4) + ADC2 (GPIO5, arbitrated with the Wi-Fi PWDET), RMT 0-3 (TX 0-1, RX 2-3), I2S 0 only, USB 0 (fixed USB Serial/JTAG pads), TWAI 0 (1 CAN controller). No SDMMC host and no LCD_CAM."
+            },
+            "additionalProperties": {
+              "allOf": [
+                { "if": { "properties": { "type": { "const": "uart" }}}, "then": { "properties": { "instance": { "enum": [0,1]     }}}},
+                { "if": { "properties": { "type": { "const": "i2c"  }}}, "then": { "properties": { "instance": { "enum": [0]       }}}},
+                { "if": { "properties": { "type": { "const": "spi"  }}}, "then": { "properties": { "instance": { "enum": [2]       }}}},
+                { "if": { "properties": { "type": { "const": "ledc" }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3,4,5] }}}},
+                { "if": { "properties": { "type": { "const": "adc"  }}}, "then": { "properties": { "instance": { "enum": [1,2]     }}}},
+                { "if": { "properties": { "type": { "const": "rmt"  }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3] }}}},
+                { "if": { "properties": { "type": { "const": "i2s"  }}}, "then": { "properties": { "instance": { "enum": [0]       }}}},
+                { "if": { "properties": { "type": { "const": "usb"  }}}, "then": { "properties": { "instance": { "enum": [0]       }}}},
+                { "if": { "properties": { "type": { "const": "twai" }}}, "then": { "properties": { "instance": { "enum": [0]       }}}}
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "target": { "properties": { "chip": { "const": "esp32c2" } }, "required": ["chip"] } } },
+      "then": {
+        "properties": {
+          "peripherals": {
+            "propertyNames": {
+              "enum": [
+                "uart0","uart1",
+                "i2c0",
+                "spi2",
+                "ledc0","ledc1","ledc2","ledc3","ledc4","ledc5",
+                "adc1"
+              ],
+              "description": "ESP32-C2 (IDF v5.4): UART 0-1, I2C 0 only, SPI 2 only, LEDC 0-5 and ADC1 (GPIO0-4) only. The ESP32-C2 has no RMT, I2S, TWAI, USB, LCD_CAM or SD host controller."
+            },
+            "additionalProperties": {
+              "allOf": [
+                { "if": { "properties": { "type": { "const": "uart" }}}, "then": { "properties": { "instance": { "enum": [0,1]     }}}},
+                { "if": { "properties": { "type": { "const": "i2c"  }}}, "then": { "properties": { "instance": { "enum": [0]       }}}},
+                { "if": { "properties": { "type": { "const": "spi"  }}}, "then": { "properties": { "instance": { "enum": [2]       }}}},
+                { "if": { "properties": { "type": { "const": "ledc" }}}, "then": { "properties": { "instance": { "enum": [0,1,2,3,4,5] }}}},
+                { "if": { "properties": { "type": { "const": "adc"  }}}, "then": { "properties": { "instance": { "enum": [1]       }}}}
+              ]
+            }
+          }
+        }
+      }
     }
   ],
   "properties": {
@@ -143,12 +206,14 @@
       "properties": {
         "chip": {
           "type": "string",
-          "enum": ["esp32s3", "esp32c6", "esp32p4"],
+          "enum": ["esp32s3", "esp32c6", "esp32p4", "esp32c3", "esp32c2"],
           "description": "Target chip identifier used to route hardware rules.",
           "x-doc-enum": [
             "ESP32-S3 (v5.3 GPIO + UART/I2C/SPI/LEDC/ADC/RMT/I2S)",
             "ESP32-C6 (v5.3 single ADC1, RMT 4 ch, I2S 0 only)",
-            "ESP32-P4 (v5.4 ADC1 GPIO16-23/49-54 only, RMT 8 ch, I2S 0-2)"
+            "ESP32-P4 (v5.4 ADC1 GPIO16-23/49-54 only, RMT 8 ch, I2S 0-2)",
+            "ESP32-C3 (v5.4 22 GPIO, ADC1 5 ch + ADC2 1 ch, RMT 4 ch TX 0-1/RX 2-3, I2S 0 only, 1 TWAI)",
+            "ESP32-C2 (v5.4 21 GPIO with 14 usable on SiP-flash parts, ADC1 only, no RMT/I2S/TWAI/USB, SPI 2 only)"
           ]
         },
         "package": {

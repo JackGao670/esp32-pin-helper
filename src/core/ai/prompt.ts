@@ -33,13 +33,13 @@ export function supportedChips(): string[] {
 
 /**
  * Best-effort chip detection from a natural-language request ("use the P4", "ESP32-C6", "on s3").
- * An explicit `esp32-<x>` spelling wins over a bare alias (`s3` / `c6` / `p4`).
+ * An explicit `esp32-<x>` spelling wins over a bare alias (`s3` / `c6` / `p4` / `c3` / `c2`).
  */
 export function detectChip(text: string): string | undefined {
   if (!text) return undefined;
-  const explicit = /\besp32[-\s]?(s3|c6|p4)\b/i.exec(text);
+  const explicit = /\besp32[-\s]?(s3|c6|p4|c3|c2)\b/i.exec(text);
   if (explicit) return `esp32${explicit[1].toLowerCase()}`;
-  const alias = /\b(s3|c6|p4)\b/i.exec(text);
+  const alias = /\b(s3|c6|p4|c3|c2)\b/i.exec(text);
   return alias ? `esp32${alias[1].toLowerCase()}` : undefined;
 }
 

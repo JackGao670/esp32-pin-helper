@@ -1,0 +1,24 @@
+{
+  "id": "esp32c3",
+  "name": "ESP32-C3",
+  "architecture": "RISC-V",
+  "databaseVersion": "0.1.0",
+  "scope": "Logical GPIO, standard UART/I2C/SPI, LEDC channels, ADC1-2, RMT channels, I2S and TWAI; package/SiP variants and LP functions not fully checked",
+  "source": {
+    "document": "ESP-IDF GPIO & RTC GPIO",
+    "version": "v5.4",
+    "url": "https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32c3/api-reference/peripherals/gpio.html"
+  },
+  "gpioNumbers": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+  "defaultCapabilities": { "input": true, "output": true, "openDrain": true, "gpioMatrix": true },
+  "strapping": [2, 8, 9],
+  "rtc": [0, 1, 2, 3, 4, 5],
+  "analog": [0, 1, 2, 3, 4, 5],
+  "adcUnits": { "1": [0, 1, 2, 3, 4], "2": [5] },
+  "adcWifiSharedUnits": [2],
+  "memoryPins": [12, 13, 14, 15, 16, 17],
+  "octalMemoryPins": [],
+  "usbJtag": [18, 19],
+  "variantPins": [12, 13, 14, 15, 16, 17],
+  "functions": ["GPIO_INPUT", "GPIO_OUTPUT", "GPIO_OPEN_DRAIN"]
+}

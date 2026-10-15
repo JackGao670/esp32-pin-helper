@@ -41,7 +41,7 @@ export const DEFAULT_SETTINGS: PlannerSettings = {
 };
 
 export function isTargetChip(value: unknown): value is TargetChip {
-  return value === "esp32s3" || value === "esp32c6" || value === "esp32p4";
+  return value === "esp32s3" || value === "esp32c6" || value === "esp32p4" || value === "esp32c3" || value === "esp32c2";
 }
 
 export function isRmtChannelBank(value: unknown): value is RmtChannelBank {

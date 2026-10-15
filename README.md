@@ -148,6 +148,8 @@ ESP Pin Planner owns a single root-level file in your workspace:
 | `esp32s3` | ESP32-S3 | ESP32-S3-DevKitC-1 |
 | `esp32c6` | ESP32-C6 | ESP32-C6-DevKitC-1, ESP32-C6-DevKitM-1 |
 | `esp32p4` | ESP32-P4 | ESP32-P4-Function-EV-Board |
+| `esp32c3` | ESP32-C3 | — (chip data only) |
+| `esp32c2` | ESP32-C2 | — (chip data only) |
 
 Each chip database records its source documents (TRM chapter + ESP-IDF version) inline.
 

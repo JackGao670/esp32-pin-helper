@@ -224,3 +224,63 @@ test("memory and default USB Serial/JTAG pin reassignments warn, UART0 on its de
   uart0.signals = { tx: "GPIO19", rx: "GPIO20" };
   assert.equal(validateGpio(uart0).filter(p => /console\/JTAG/.test(p.message)).length, 0);
 });
+
+test("C3 GPIO capabilities, strapping, memory and USB Serial/JTAG pins match the official summary", () => {
+  const device = getDevice("esp32c3")!;
+  assert.equal(device.pins.length, 22);
+  assert.deepEqual(device.pins.map(pin => pin.gpio), Array.from({ length: 22 }, (_, i) => i));
+  // Analog pads are GPIO0-5 (ADC1 GPIO0-4 + ADC2 GPIO5); GPIO6 is digital-only.
+  assert.equal(device.pins[0].capabilities.analog, true);
+  assert.equal(device.pins[5].capabilities.analog, true);
+  assert.equal(device.pins[6].capabilities.analog, false);
+  assert.equal(device.pins[2].capabilities.rtc, true);
+  assert.equal(device.pins[6].capabilities.rtc, false);
+  assert.deepEqual(device.pins.filter(pin => pin.restrictions.some(text => /Strapping/.test(text))).map(pin => pin.gpio), [2, 8, 9]);
+  assert.ok(device.pins[18].restrictions.some(text => /USB Serial\/JTAG/.test(text)));
+  assert.ok(device.pins[12].restrictions.some(text => /Flash\/PSRAM/.test(text)));
+  assert.ok(device.pins[13].restrictions.some(text => /bonded/.test(text)));
+});
+
+test("C2 GPIO capabilities, strapping, SiP-flash and USB handling match the official summary", () => {
+  const device = getDevice("esp32c2")!;
+  assert.equal(device.pins.length, 21);
+  assert.deepEqual(device.pins.map(pin => pin.gpio), Array.from({ length: 21 }, (_, i) => i));
+  assert.equal(device.pins[0].capabilities.analog, true);
+  assert.equal(device.pins[4].capabilities.analog, true);
+  assert.equal(device.pins[5].capabilities.analog, false);
+  assert.deepEqual(device.pins.filter(pin => pin.restrictions.some(text => /Strapping/.test(text))).map(pin => pin.gpio), [8, 9]);
+  // GPIO11-17 are only bonded out on non-SiP parts, so every one of them carries the variant note.
+  assert.deepEqual(device.pins.filter(pin => pin.restrictions.some(text => /bonded/.test(text))).map(pin => pin.gpio), [11, 12, 13, 14, 15, 16, 17]);
+  // The C2 has no USB controller, so no pin carries the USB Serial/JTAG restriction.
+  assert.equal(device.pins.some(pin => pin.restrictions.some(text => /USB Serial\/JTAG/.test(text))), false);
+});
+
+test("C3 and C2 controller instances are chip-specific and do not leak S3/P4 resources", () => {
+  // C3: UART 0-1, I2C 0 only, SPI 2 only, LEDC 0-5, ADC 1+2, RMT 0-3 (TX 0-1 / RX 2-3), I2S 0, USB 0, TWAI 0.
+  assert.ok(definition("uart", 1, "esp32c3"));
+  assert.equal(definition("uart", 2, "esp32c3"), undefined);
+  assert.equal(definition("i2c", 1, "esp32c3"), undefined);
+  assert.equal(definition("spi", 3, "esp32c3"), undefined);
+  assert.ok(definition("ledc", 5, "esp32c3"));
+  assert.equal(definition("ledc", 6, "esp32c3"), undefined);
+  assert.ok(definition("rmt", 3, "esp32c3"));
+  assert.equal(definition("rmt", 4, "esp32c3"), undefined);
+  assert.ok(definition("i2s", 0, "esp32c3"));
+  assert.ok(definition("usb", 0, "esp32c3"));
+  assert.ok(definition("twai", 0, "esp32c3"));
+  assert.equal(definition("sdmmc", 0, "esp32c3"), undefined);
+  assert.deepEqual(candidates(definition("uart", 0, "esp32c3")!.signals[0], "esp32c3").length, 22);
+  const c3adc = definition("adc", 1, "esp32c3")!.signals[0];
+  assert.deepEqual(candidates(c3adc, "esp32c3", 1), [0, 1, 2, 3, 4]);
+  assert.deepEqual(candidates(c3adc, "esp32c3", 2), [5]);
+  // C2: UART 0-1, I2C 0, SPI 2, LEDC 0-5 and ADC1 only.
+  assert.ok(definition("uart", 1, "esp32c2"));
+  assert.equal(definition("i2c", 1, "esp32c2"), undefined);
+  assert.ok(definition("ledc", 5, "esp32c2"));
+  assert.equal(definition("adc", 2, "esp32c2"), undefined);
+  assert.equal(definition("rmt", 0, "esp32c2"), undefined);
+  assert.equal(definition("i2s", 0, "esp32c2"), undefined);
+  assert.equal(definition("usb", 0, "esp32c2"), undefined);
+  assert.equal(definition("twai", 0, "esp32c2"), undefined);
+  assert.deepEqual(candidates(definition("uart", 0, "esp32c2")!.signals[0], "esp32c2").length, 21);
+});

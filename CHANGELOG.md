@@ -61,6 +61,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   input and an output path for each LP SPI line, so the four lines are modelled role-agnostically rather than
   asserting a master/slave role. The schema gains the `lpspi` / `lpi2s` types, the `signals-lpspi` /
   `signals-lpi2s` signal maps and the P4 owner/instance constraints. LP_CAM remains unmodelled.
+- **ESP32-C3 / ESP32-C2 chip data** (§4.1): two more RISC-V targets join the database. The **ESP32-C3**
+  contributes 22 GPIOs (no input-only pins, strapping GPIO2/8/9, RTC GPIO0-5), UART 0-1, I2C 0, SPI 2,
+  LEDC 0-5, ADC1 (GPIO0-4) + ADC2 (GPIO5), RMT 0-3 (TX 0-1 / RX 2-3), I2S 0, the fixed **USB Serial/JTAG**
+  pads (GPIO18/19) and a single **TWAI** controller; it has no SDMMC host and no LCD_CAM. The **ESP32-C2**
+  contributes 21 GPIOs (of which GPIO11-17 are only bonded on non-SiP parts, so 14 pins remain on SiP-flash
+  modules), strapping GPIO8/9, RTC GPIO0-5, UART 0-1, I2C 0, SPI 2, LEDC 0-5 and **ADC1 only** — it has no
+  RMT, I2S, TWAI, USB, LCD_CAM or SD host controller, and GPIO19/20 carry the default U0RXD/U0TXD function.
+  The `TargetChip` union, the settings guard, the schema (`chip` enum plus per-chip owner/instance rules),
+  the RMT TX/RX bank rule and the AI chip detector were extended accordingly. No reference boards are
+  added yet for these two chips.
 
 ### Fixed
 - **ESP32-P4 ADC units** (§4.1): the P4 database now models **two** ADC units — ADC1 on GPIO16-23 and

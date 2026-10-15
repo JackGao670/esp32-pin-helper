@@ -5,7 +5,7 @@ import { validateGpio } from "../../src/core/validator/gpio";
 import { addPeripheral, removePeripheral, setSignal, selectTarget } from "../../src/core/model/peripherals";
 import { getDevice } from "../../src/database/loader";
 import { resolveBoardFromSettings, boardInfoOf } from "../../src/database/boardLoader";
-import { DEFAULT_SETTINGS } from "../../src/config/userSettings";
+import { DEFAULT_SETTINGS, isTargetChip } from "../../src/config/userSettings";
 import { resolveLanguage, translator, type Language } from "../../src/i18n/messages";
 
 declare const acquireVsCodeApi: undefined | (() => { postMessage(message: ClientMessage): void });
@@ -29,9 +29,9 @@ interface Store {
 
 function makeInitialState(): PlannerState {
   const config = createConfig();
-  const chip = config.target.chip as "esp32s3" | "esp32c6" | "esp32p4";
+  const chip = config.target.chip;
   const board = resolveBoardFromSettings(DEFAULT_SETTINGS.board,
-    chip === "esp32s3" || chip === "esp32c6" || chip === "esp32p4" ? chip : "esp32s3");
+    isTargetChip(chip) ? chip : "esp32s3");
   const state: PlannerState = {
     config,
     revision: 0,
@@ -64,9 +64,9 @@ export const usePlanner = create<Store>((set, get) => ({
           : message.type === "removePeripheral" ? removePeripheral(state.config, message.owner)
           : message.type === "selectTarget" ? selectTarget(state.config, message.chip)
           : setSignal(state.config, message.owner, message.signal, message.gpio);
-        const chip = config.target.chip as "esp32s3" | "esp32c6" | "esp32p4";
+        const chip = config.target.chip;
         const board = resolveBoardFromSettings(DEFAULT_SETTINGS.board,
-          chip === "esp32s3" || chip === "esp32c6" || chip === "esp32p4" ? chip : "esp32s3");
+          isTargetChip(chip) ? chip : "esp32s3");
         set({
           selected: getDevice(config.target.chip)?.pins.some(pin => pin.gpio === get().selected) ? get().selected : 0,
           state: {
