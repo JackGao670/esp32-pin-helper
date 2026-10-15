@@ -1,0 +1,57 @@
+name: Device Pack
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/esp-device-pack/**"
+      - ".github/workflows/device-pack.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "packages/esp-device-pack/**"
+      - ".github/workflows/device-pack.yml"
+  workflow_dispatch:
+
+# The chip/board database is versioned and released on its own track (§6.2 task 4.2), so chip
+# data can ship without waiting for an extension release. Publishing to npm is intentionally
+# left out: it needs an NPM_TOKEN and ownership of the `esp-device-pack` name (§3.32). Until
+# that identity is decided, the validated tarball is attached as a build artifact.
+
+concurrency:
+  group: device-pack-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pack:
+    name: validate · pack
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/esp-device-pack
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Every path named in pack.json must exist, and the version fields must be semver.
+      - name: Validate the manifest
+        run: >-
+          node -e "const fs=require('fs');const p=require('./pack.json');
+          const semver=v=>/^[0-9]+\.[0-9]+\.[0-9]+$/.test(v);
+          if(!semver(p.version)||!semver(p.databaseVersion))throw new Error('pack.json version/databaseVersion must be semver');
+          if(!p.devices.length)throw new Error('pack.json lists no devices');
+          for(const d of p.devices)for(const f of [d.device,d.peripherals])fs.accessSync(f);
+          for(const b of p.boards)fs.accessSync(b.path);
+          console.log('esp-device-pack',p.version,'apiVersion',p.apiVersion);"
+
+      - name: Build the tarball
+        run: npm pack
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: esp-device-pack-tarball
+          path: packages/esp-device-pack/*.tgz
+          if-no-files-found: error

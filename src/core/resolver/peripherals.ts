@@ -1,6 +1,6 @@
-import data from "../../../devices/esp32s3/peripherals.json";
-import c6 from "../../../devices/esp32c6/peripherals.json";
-import p4 from "../../../devices/esp32p4/peripherals.json";
+import data from "esp-device-pack/devices/esp32s3/peripherals.json";
+import c6 from "esp-device-pack/devices/esp32c6/peripherals.json";
+import p4 from "esp-device-pack/devices/esp32p4/peripherals.json";
 import { getDevice, type PinDefinition } from "../../database/loader";
 
 export interface SignalDefinition {

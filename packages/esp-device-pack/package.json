@@ -1,0 +1,9 @@
+{
+  "name": "esp-device-pack",
+  "version": "1.0.0",
+  "description": "Chip and board database (devices/ boards/ JSON) consumed by ESP Pin Planner.",
+  "license": "MIT",
+  "keywords": ["esp32", "esp-idf", "pinout", "gpio", "database"],
+  "main": "pack.json",
+  "files": ["pack.json", "devices", "boards"]
+}

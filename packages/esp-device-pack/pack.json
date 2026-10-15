@@ -1,0 +1,17 @@
+{
+  "id": "esp-device-pack",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "databaseVersion": "1.0.0",
+  "devices": [
+    { "chip": "esp32s3", "device": "devices/esp32s3/esp32s3.json", "peripherals": "devices/esp32s3/peripherals.json" },
+    { "chip": "esp32c6", "device": "devices/esp32c6/esp32c6.json", "peripherals": "devices/esp32c6/peripherals.json" },
+    { "chip": "esp32p4", "device": "devices/esp32p4/esp32p4.json", "peripherals": "devices/esp32p4/peripherals.json" }
+  ],
+  "boards": [
+    { "vendor": "espressif", "id": "esp32-s3-devkitc-1", "path": "boards/espressif/esp32-s3-devkitc-1.json" },
+    { "vendor": "espressif", "id": "esp32-c6-devkitc-1", "path": "boards/espressif/esp32-c6-devkitc-1.json" },
+    { "vendor": "espressif", "id": "esp32-c6-devkitm-1", "path": "boards/espressif/esp32-c6-devkitm-1.json" },
+    { "vendor": "espressif", "id": "esp32-p4-function-ev-board", "path": "boards/espressif/esp32-p4-function-ev-board.json" }
+  ]
+}

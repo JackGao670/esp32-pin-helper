@@ -1,7 +1,7 @@
-import s3Devkitc1 from "../../boards/espressif/esp32-s3-devkitc-1.json";
-import c6Devkitc1 from "../../boards/espressif/esp32-c6-devkitc-1.json";
-import c6Devkitm1 from "../../boards/espressif/esp32-c6-devkitm-1.json";
-import p4FunctionEvBoard from "../../boards/espressif/esp32-p4-function-ev-board.json";
+import s3Devkitc1 from "esp-device-pack/boards/espressif/esp32-s3-devkitc-1.json";
+import c6Devkitc1 from "esp-device-pack/boards/espressif/esp32-c6-devkitc-1.json";
+import c6Devkitm1 from "esp-device-pack/boards/espressif/esp32-c6-devkitm-1.json";
+import p4FunctionEvBoard from "esp-device-pack/boards/espressif/esp32-p4-function-ev-board.json";
 
 import type { BoardProfile } from "../core/model/boards";
 import type { TargetChip } from "../core/model/project";

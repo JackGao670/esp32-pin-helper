@@ -31,9 +31,10 @@ The contract with the user's firmware is the JSON file, nothing more.
 │        ├── src/core/ai/      intent · prompt  (LLM → optimizer)  │
 │        └── src/database/     loader · boardLoader                │
 │                                                                  │
-│  data (bundled at build time)                                    │
+│  data (esp-device-pack, bundled at build time)                   │
 │        devices/esp32{s3,c6,p4}/*.json     chip databases         │
 │        boards/espressif/*.json            board profiles         │
+│        pack.json                          manifest + file list    │
 └───────────────────────────┬──────────────────────────────────────┘
                             │  postMessage: ClientMessage / HostMessage
 ┌───────────────────────────▼──────────────────────────────────────┐
@@ -56,7 +57,7 @@ Two invariants keep this simple:
 
 ## 3. Data model
 
-### 3.1 Chip database (`devices/<chip>/<chip>.json`)
+### 3.1 Chip database (`esp-device-pack`: `devices/<chip>/<chip>.json`)
 
 Loaded and validated by [loader.ts](file:///d:/workspace/esp-pin-planer/esp32-pin-helper/src/database/loader.ts).
 Per chip: `gpioNumbers`, `strapping` / `rtc` / `analog` / `memoryPins` / `octalMemoryPins` / `usbJtag`
@@ -70,7 +71,7 @@ and a list of human-readable `restrictions` (strapping, Flash/PSRAM, octal, USB-
 no-open-drain, variant-bonding). Those restriction strings are the shared vocabulary the validator and
 the optimizer both key off.
 
-### 3.2 Board profiles (`boards/<vendor>/<board>.json`)
+### 3.2 Board profiles (`esp-device-pack`: `boards/<vendor>/<board>.json`)
 
 `BoardProfile` adds a physical-board layer on top of a chip: labelled pins, `reservedGpios`,
 `peripherals` (default signal→GPIO routes) and `onboardPins` (board-wired devices such as the USB-UART
@@ -218,8 +219,11 @@ edit can never be clobbered. File watchers on `.pinconfig.json` and `sdkconfig` 
 ## 9. Build & test
 
 - **Bundling**: `esbuild` bundles the extension into `dist/extension.js`, inlining the chip/board JSON
-  (so the raw `devices/**` and `boards/**` trees are *not* shipped); `vite` bundles the WebView into
-  `dist/webview/planner.{js,css}`.
+  from the `esp-device-pack` package (`packages/esp-device-pack`, a `file:` dependency carrying its own
+  `version` / `apiVersion` / `databaseVersion` in `pack.json`) — so the raw `devices/**` and `boards/**`
+  trees are *not* shipped; `vite` bundles the WebView into `dist/webview/planner.{js,css}`. The manifest's
+  `apiVersion` is gated in `src/database/pack.ts` and checked against the loaded data by tests, so chip
+  data can be versioned and released on its own track (`.github/workflows/device-pack.yml`).
 - **Packaging**: `.vscodeignore` keeps only `dist/**`, `schemas/**`, `resources/**` and `package.json`.
 - **Tests**: `tsx --test test/*.test.ts` — data integrity, resolver legality, validator rules, config
   round-trips, the optimizer (board defaults, strapping avoidance, occupied pins, Top-N, per-signal

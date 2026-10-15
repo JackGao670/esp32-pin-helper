@@ -5,8 +5,7 @@ src/**
 test/**
 webview/**
 doc/**
-boards/**
-devices/**
+packages/**
 node_modules/**
 .vscode/**
 .github/**

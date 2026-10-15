@@ -19,6 +19,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   signals, plain GPIO functions), never *which* GPIO. The deterministic optimizer assigns the pins and
   the validator gates the result, so a hallucinated route can never reach `.pinconfig.json`.
 - Release engineering: `README.md`, `OVERVIEW.md`, `CHANGELOG.md`, `LICENSE`, extension icon and Marketplace metadata.
+- **Actionable diagnostics** (§4.7): every validation problem now says how to fix it — a bad GPIO lists the
+  valid pins, an input-only pin suggests an output-capable one, a mis-routed signal names the GPIOs that
+  would work, an unknown signal lists the real ones, and an unsupported peripheral names the instances the
+  chip does have. JSON syntax errors include the concrete reason.
+- **Performance baseline** (§4.7): a regression test validates the widest legal ESP32-S3 configuration
+  (40+ assignments) through `validateGpio` and the diagnostics bridge and asserts a P95 under 100 ms.
+- **`esp-device-pack`** (§4.2): the chip and board database (devices/ boards/ JSON) now lives in its own
+  versioned package under `packages/esp-device-pack`, consumed by the extension through a `file:` dependency
+  and shipped with a `pack.json` manifest (`version`, `apiVersion`, `databaseVersion`, the device/board
+  file list). The manifest's `apiVersion` is gated at load time and checked against the real data by tests,
+  so chip data can be versioned and released on its own track. A dedicated `Device Pack` workflow validates
+  the manifest and packs the tarball independently of the extension.
 
 ## [0.0.3] - 2026-10-14
 

@@ -8,8 +8,8 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# The database pack (esp-device-pack) is not split out yet — see §6.2 task 4.2.
-# Once it is, give it its own workflow so data can be released without the extension.
+# The chip/board database lives in its own package (packages/esp-device-pack) and is
+# released by .github/workflows/device-pack.yml — see §6.2 task 4.2.
 
 concurrency:
   group: ci-${{ github.ref }}
